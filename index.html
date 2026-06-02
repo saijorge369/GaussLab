@@ -1,0 +1,2134 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GaussLab‑AI 3D+ v8 | Tutor de Ley de Gauss | Prof. Wong</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#07101d;--panel:#0d1929;--panel2:#111f33;--text:#e8f3ff;--muted:#7a9bb8;--line:#1e3252;
+ --accent:#38b6ff;--accentText:#04111e;--gold:#ffd04a;--field:#35e87c;--normal:#b57fff;--pos:#ff4d5e;--neg:#4d9fff;
+ --matter:#1dc8e0;--conductor:#b8c5d6;--warning:#ffab00;--danger:#ff5a68;--ok:#36d680;--graph:#7deeff;
+ --face:#ff9a10;--shadow:0 22px 60px rgba(0,0,0,.42);--radius:16px;
+ --font-body:'DM Sans',system-ui,sans-serif;
+ --font-mono:'Space Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg);color:var(--text)}
+body{overflow:hidden}
+button,select,input{font:inherit}
+
+/* ── App shell ── */
+.app{
+  height:100dvh;padding:9px;
+  display:grid;grid-template-rows:auto 1fr;gap:9px;
+  background:
+    radial-gradient(ellipse 60% 40% at 8% -5%,color-mix(in srgb,var(--accent) 14%,transparent),transparent),
+    radial-gradient(ellipse 40% 30% at 92% 100%,color-mix(in srgb,var(--normal) 8%,transparent),transparent),
+    var(--bg);
+}
+
+/* ── Header ── */
+header{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:9px 16px;border:1px solid var(--line);border-radius:var(--radius);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--panel) 96%,var(--accent)),var(--panel));
+  box-shadow:var(--shadow),inset 0 1px 0 color-mix(in srgb,var(--accent) 20%,transparent);
+  position:relative;overflow:hidden;
+}
+header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:.6;
+}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo-mark{
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--normal) 60%,var(--accent)));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;box-shadow:0 0 14px color-mix(in srgb,var(--accent) 35%,transparent);
+}
+.header-titles h1{margin:0;font-size:clamp(.95rem,1.8vw,1.25rem);font-weight:700;letter-spacing:-.02em}
+.header-titles .sub{margin-top:2px;color:var(--muted);font-size:.71rem;font-family:var(--font-mono)}
+.version-pill{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 8px;
+  border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));
+  background:color-mix(in srgb,var(--accent) 8%,transparent);
+  font-size:.65rem;font-weight:700;color:var(--accent);font-family:var(--font-mono);
+  animation:pill-pulse 3s ease-in-out infinite;
+}
+@keyframes pill-pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 25%,transparent)}50%{box-shadow:0 0 0 4px transparent}}
+.toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+/* ── Buttons ── */
+button{border:1px solid transparent;border-radius:11px;padding:7px 12px;font-weight:700;background:var(--accent);color:var(--accentText);cursor:pointer;transition:all .15s ease;letter-spacing:-.01em}
+button.secondary{background:transparent;border-color:var(--line);color:var(--text)}
+button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+button.danger-btn{background:var(--danger);color:#fff}
+
+/* ── Layout ── */
+.layout{min-height:0;display:grid;grid-template-columns:minmax(540px,1fr) 462px;gap:9px}
+.viewer{
+  min-height:0;position:relative;border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;
+  background:radial-gradient(ellipse at 50% 50%,color-mix(in srgb,var(--bg) 70%,#000),#030810);
+  box-shadow:var(--shadow);
+}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+
+/* ── HUD redesigned ── */
+.hud{
+  position:absolute;top:12px;left:12px;
+  max-width:min(520px,calc(100% - 24px));
+  background:color-mix(in srgb,var(--bg) 78%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line));
+  backdrop-filter:blur(10px) saturate(1.4);
+  padding:10px 12px 10px;border-radius:14px;pointer-events:none;
+  box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 color-mix(in srgb,var(--accent) 15%,transparent);
+}
+.hudTitle{
+  font-weight:700;font-size:.85rem;line-height:1.2;
+  display:flex;align-items:center;gap:6px;
+}
+.hudTitle::before{content:'⬡';color:var(--accent);font-size:.75rem}
+.region-badge{
+  margin-left:auto;padding:2px 7px;border-radius:999px;
+  font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;
+  font-family:var(--font-mono);
+}
+.region-inside{background:color-mix(in srgb,var(--pos) 20%,transparent);color:var(--pos);border:1px solid color-mix(in srgb,var(--pos) 35%,transparent)}
+.region-outside{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+.region-conductor{background:color-mix(in srgb,var(--conductor) 15%,transparent);color:var(--conductor);border:1px solid color-mix(in srgb,var(--conductor) 30%,transparent)}
+.hudRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.metric{
+  flex:1;min-width:80px;padding:5px 7px;
+  border-radius:9px;border:1px solid var(--line);
+  background:color-mix(in srgb,var(--panel) 60%,transparent);
+}
+.metric span{display:block;color:var(--muted);font-size:.6rem;text-transform:uppercase;font-weight:700;letter-spacing:.05em;margin-bottom:2px}
+.metric strong{font-size:.82rem;color:var(--gold);font-family:var(--font-mono);font-weight:700}
+.metric.highlight{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+@keyframes metric-flash{0%{background:color-mix(in srgb,var(--gold) 18%,transparent)}100%{background:color-mix(in srgb,var(--panel) 60%,transparent)}}
+.metric.flash{animation:metric-flash .45s ease-out}
+
+.controlsTip{
+  position:absolute;left:12px;bottom:12px;padding:6px 10px;border-radius:10px;
+  border:1px solid var(--line);background:color-mix(in srgb,var(--bg) 78%,transparent);
+  font-size:.67rem;color:var(--muted);backdrop-filter:blur(6px);
+  font-family:var(--font-mono);
+}
+.legend{
+  position:absolute;right:12px;bottom:12px;display:grid;gap:4px;padding:8px 10px;
+  border:1px solid var(--line);border-radius:12px;
+  background:color-mix(in srgb,var(--bg) 78%,transparent);
+  font-size:.67rem;backdrop-filter:blur(6px);
+}
+.key{display:flex;align-items:center;gap:6px}
+.dot{display:inline-block;width:14px;height:7px;border-radius:999px}
+
+/* ── Sidebar ── */
+.side{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:9px;padding-right:2px;scroll-behavior:smooth}
+.side::-webkit-scrollbar{width:4px}
+.side::-webkit-scrollbar-track{background:transparent}
+.side::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+
+/* ── Cards ── */
+.card{
+  padding:12px;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--panel);
+  box-shadow:0 4px 20px rgba(0,0,0,.2);
+  transition:border-color .2s;
+}
+.card:hover{border-color:color-mix(in srgb,var(--accent) 20%,var(--line))}
+.card h2{
+  margin:0 0 10px;font-size:.86rem;font-weight:700;
+  display:flex;justify-content:space-between;align-items:center;
+  letter-spacing:-.01em;
+}
+.card-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;border-radius:6px;margin-right:5px;
+  background:color-mix(in srgb,var(--accent) 15%,transparent);
+  color:var(--accent);font-size:.65rem;font-weight:800;font-family:var(--font-mono);
+}
+
+/* ── Form elements ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+label{display:grid;gap:4px;font-size:.69rem;font-weight:600;color:var(--muted);letter-spacing:.01em}
+select,input[type=number],input[type=text]{
+  width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:9px;
+  background:var(--panel2);color:var(--text);
+  transition:border-color .15s;
+}
+select:focus,input:focus{outline:none;border-color:var(--accent)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+/* ── Params ── */
+.param{margin-bottom:8px}
+.paramTop{display:flex;justify-content:space-between;align-items:center;font-size:.69rem;font-weight:600;color:var(--muted)}
+.value{font-variant-numeric:tabular-nums;color:var(--gold);font-family:var(--font-mono);font-size:.75rem}
+.paramInputs{display:grid;grid-template-columns:1fr 86px;gap:8px;align-items:center;margin-top:4px}
+.paramInputs input[type=number]{padding:7px 6px;text-align:right;font-variant-numeric:tabular-nums}
+.paramInputs input[type=range]{min-width:0}
+.solidHint{font-size:.67rem;color:var(--muted)}
+
+/* ── Status ── */
+.status{
+  padding:7px 9px;border-left:3px solid var(--ok);
+  background:color-mix(in srgb,var(--ok) 9%,transparent);
+  border-radius:9px;font-size:.73rem;line-height:1.4;
+  transition:all .25s;
+}
+.status.warn{border-color:var(--warning);background:color-mix(in srgb,var(--warning) 9%,transparent)}
+.status.bad{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 9%,transparent)}
+
+/* ── Toggles ── */
+.toggles{display:flex;gap:5px;flex-wrap:wrap}
+.toggle{
+  padding:5px 8px;border:1px solid var(--line);border-radius:8px;
+  background:var(--panel2);font-size:.68rem;color:var(--muted);
+  cursor:pointer;user-select:none;transition:all .15s;
+}
+.toggle:hover{border-color:var(--accent);color:var(--text)}
+.toggle.on{background:var(--field);border-color:var(--field);color:#031807;font-weight:700}
+
+/* ── Big toggle buttons ── */
+.primaryTools{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.bigToggle{
+  display:grid;gap:3px;text-align:left;
+  border:1px solid var(--line);background:var(--panel2);color:var(--text);
+  border-radius:12px;padding:9px 10px;min-height:58px;
+  transition:all .18s;
+}
+.bigToggle strong{font-size:.76rem;font-weight:700}
+.bigToggle small{font-size:.63rem;color:var(--muted);font-weight:500;line-height:1.35}
+.bigToggle:hover{border-color:color-mix(in srgb,var(--accent) 50%,var(--line));background:color-mix(in srgb,var(--accent) 6%,var(--panel2))}
+.bigToggle.on{
+  border-color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 12%,var(--panel));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 28%,transparent),0 0 12px color-mix(in srgb,var(--accent) 10%,transparent);
+}
+.bigToggle.on strong::before{content:"✓ ";color:var(--ok)}
+
+.controlHeading{
+  font-size:.67rem;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);font-weight:800;margin:4px 0 7px;
+  font-family:var(--font-mono);
+}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:9px}
+.tab{
+  flex:1;padding:6px 5px;border:1px solid var(--line);border-radius:9px;
+  background:transparent;color:var(--muted);font-size:.69rem;cursor:pointer;
+  transition:all .15s;font-weight:600;
+}
+.tab:hover{color:var(--text);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.tab.active{
+  background:color-mix(in srgb,var(--accent) 14%,transparent);
+  color:var(--text);border-color:var(--accent);font-weight:700;
+}
+
+/* ── Panel content ── */
+.panelTab{font-size:.74rem;line-height:1.48}.hidden{display:none !important}
+.table{width:100%;border-collapse:collapse;font-size:.73rem}
+.table td{padding:5px 4px;border-bottom:1px dashed var(--line)}
+.table td:last-child{text-align:right;font-variant-numeric:tabular-nums;color:var(--gold);font-family:var(--font-mono)}
+.formula{
+  white-space:pre-wrap;font-family:var(--font-mono);font-size:.71rem;
+  background:var(--panel2);border:1px solid var(--line);
+  padding:9px;border-radius:10px;line-height:1.55;margin-top:8px;
+}
+.fine{font-size:.7rem;line-height:1.43;color:var(--muted)}
+.faceNote{
+  margin-top:8px;padding:8px 9px;border-radius:10px;
+  background:color-mix(in srgb,var(--face) 10%,transparent);
+  border-left:3px solid var(--face);font-size:.72rem;
+}
+.refs li{font-size:.71rem;color:var(--muted);line-height:1.47;margin:7px 0}
+
+/* ── Graph card ── */
+.graphWrap{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:8px}
+.graphWrap canvas{width:100%;height:230px;background:transparent}
+.graphNote{font-size:.7rem;color:var(--muted);margin-top:6px;line-height:1.4}
+.graphWrap canvas{height:300px;cursor:crosshair;border-radius:8px}
+.graphTooltip{
+  margin-top:7px;padding:7px 9px;border-radius:9px;
+  border:1px solid var(--line);
+  background:color-mix(in srgb,var(--graph) 8%,var(--panel));
+  font-variant-numeric:tabular-nums;font-size:.71rem;color:var(--text);
+  font-family:var(--font-mono);
+}
+.graphHeader{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:4px 2px 8px;cursor:grab;user-select:none;
+  font-size:.72rem;color:var(--muted);
+}
+.graphHeader small{font-size:.65rem;color:var(--muted);opacity:.7}
+
+/* ── Derivation blocks ── */
+.deriveBlock{padding:9px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);margin-bottom:8px}
+.deriveBlock h3{font-size:.76rem;color:var(--accent);margin:0 0 6px;font-family:var(--font-mono)}
+.deriveBlock p{margin:4px 0;font-size:.72rem;line-height:1.5}
+.math{
+  font-family:var(--font-mono);white-space:pre-wrap;
+  background:color-mix(in srgb,var(--bg) 40%,var(--panel2));
+  border-radius:9px;padding:9px;margin:6px 0;font-size:.71rem;line-height:1.65;overflow:auto;
+}
+.finalExpr{
+  border-left:4px solid var(--field);padding:9px 10px;border-radius:10px;
+  background:color-mix(in srgb,var(--field) 9%,var(--panel2));
+  font-family:var(--font-mono);font-size:.72rem;line-height:1.65;white-space:pre-wrap;
+}
+.warningTutor{
+  border-left:4px solid var(--warning);padding:8px;border-radius:9px;
+  background:color-mix(in srgb,var(--warning) 9%,var(--panel2));
+  font-size:.72rem;line-height:1.47;margin-top:8px;
+}
+.graphBadge{
+  display:inline-flex;gap:5px;align-items:center;margin-left:5px;padding:2px 7px;
+  border-radius:999px;background:color-mix(in srgb,var(--graph) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--graph) 35%,transparent);
+  color:var(--graph);font-size:.65rem;font-weight:800;font-family:var(--font-mono);
+}
+.equation{
+  font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;
+  font-size:.92rem;line-height:1.68;
+  background:color-mix(in srgb,var(--bg) 24%,var(--panel2));
+  border-radius:9px;padding:9px;margin:6px 0;overflow:auto;color:var(--text);
+}
+.equation .line{display:block;white-space:nowrap}
+.equation .indent{padding-left:18px}
+.equation .result{font-weight:700;color:var(--field)}
+.equation sub,.equation sup{font-size:.76em}
+.mathLabel{font-family:var(--font-body);font-size:.69rem;color:var(--muted);font-weight:700}
+.researchNote{
+  border-left:3px solid var(--normal);background:color-mix(in srgb,var(--normal) 8%,var(--panel2));
+  padding:8px;border-radius:9px;margin-top:8px;font-size:.72rem;line-height:1.5;
+}
+
+/* ── Special panel ── */
+.specialPanel{
+  margin-top:10px;padding:10px;
+  border:1px solid color-mix(in srgb,var(--normal) 44%,var(--line));
+  border-radius:13px;background:color-mix(in srgb,var(--normal) 7%,var(--panel2));
+}
+.specialPanel h3{margin:0 0 8px;font-size:.78rem;color:var(--normal);font-family:var(--font-mono)}
+.specialPanel .fine{margin-top:7px}
+.specialBadge{
+  display:inline-flex;gap:6px;align-items:center;padding:3px 8px;
+  border-radius:999px;border:1px solid color-mix(in srgb,var(--normal) 45%,var(--line));
+  color:var(--normal);font-size:.66rem;font-weight:800;font-family:var(--font-mono);
+}
+.componentGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:8px}
+.componentCell{border:1px solid var(--line);border-radius:9px;padding:6px 4px;text-align:center;background:var(--panel2);font-size:.66rem}
+.componentCell b{display:block;color:var(--accent);font-size:.68rem;margin-bottom:3px}
+.componentCell strong{font-size:.66rem;color:var(--gold);font-variant-numeric:tabular-nums;font-family:var(--font-mono)}
+.regionLegend{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 3px;font-size:.64rem;color:var(--muted)}
+.regionLegend span{display:inline-flex;align-items:center;gap:4px}.regionLegend i{width:11px;height:8px;border-radius:2px;display:inline-block}
+.specialNotice{
+  margin-top:8px;padding:8px 9px;border-left:3px solid var(--normal);
+  border-radius:9px;background:color-mix(in srgb,var(--normal) 8%,var(--panel2));
+  font-size:.71rem;line-height:1.45;
+}
+
+/* ── Responsive ── */
+@media(max-width:1080px){
+  body{overflow:auto}.app{height:auto;min-height:100dvh}
+  .layout{grid-template-columns:1fr}.viewer{height:62vh}.side{overflow:visible}.legend{display:none}
+}
+
+/* ── Quiz panel ── */
+.quiz-panel{
+  margin-top:10px;padding:10px 11px;border-radius:13px;
+  border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line));
+  background:color-mix(in srgb,var(--gold) 6%,var(--panel2));
+}
+.quiz-panel h4{
+  margin:0 0 8px;font-size:.78rem;color:var(--gold);
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--font-mono);
+}
+.quiz-q{font-size:.75rem;line-height:1.4;margin-bottom:9px}
+.quiz-options{display:grid;gap:5px}
+.quiz-opt{
+  padding:7px 10px;border-radius:9px;border:1px solid var(--line);
+  background:var(--panel2);font-size:.73rem;cursor:pointer;text-align:left;
+  transition:all .14s;color:var(--text);font-weight:500;
+}
+.quiz-opt:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--panel2))}
+.quiz-opt.correct{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok)}
+.quiz-opt.wrong{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 12%,transparent);color:var(--danger)}
+.quiz-feedback{
+  margin-top:8px;padding:8px 9px;border-radius:9px;font-size:.72rem;line-height:1.4;
+  background:color-mix(in srgb,var(--ok) 10%,transparent);
+  border-left:3px solid var(--ok);
+}
+.quiz-feedback.wrong-fb{background:color-mix(in srgb,var(--danger) 10%,transparent);border-color:var(--danger)}
+.quiz-nav{display:flex;gap:7px;margin-top:8px;align-items:center}
+.quiz-score{margin-left:auto;font-size:.7rem;font-family:var(--font-mono);color:var(--muted)}
+
+/* ── Welcome modal ── */
+.modal-overlay{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  animation:fade-in .25s ease;
+}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+.modal-box{
+  background:var(--panel);border:1px solid var(--line);border-radius:20px;
+  padding:28px 30px;max-width:520px;width:90%;
+  box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 1px 0 color-mix(in srgb,var(--accent) 20%,transparent);
+  animation:slide-up .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes slide-up{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-box h2{
+  margin:0 0 12px;font-size:1.3rem;font-weight:700;letter-spacing:-.02em;
+  background:linear-gradient(135deg,var(--accent),var(--normal));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.modal-box p{margin:0 0 10px;font-size:.83rem;line-height:1.55;color:var(--muted)}
+.modal-box p strong{color:var(--text)}
+.modal-features{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0 18px}
+.modal-feat{
+  padding:9px 10px;border-radius:11px;border:1px solid var(--line);
+  background:var(--panel2);font-size:.72rem;line-height:1.35;
+}
+.modal-feat .feat-icon{font-size:1.1rem;display:block;margin-bottom:4px}
+.modal-feat strong{color:var(--text);font-size:.74rem}
+.modal-footer{display:flex;gap:9px;justify-content:flex-end;margin-top:4px}
+
+/* ── Scenario change animation ── */
+@keyframes scene-flash{0%{opacity:0.3}100%{opacity:1}}
+.viewer.scene-change canvas{animation:scene-flash .35s ease-out}
+
+/* ── Export button ── */
+.export-bar{
+  display:flex;align-items:center;gap:8px;margin-top:10px;
+  padding:8px 10px;border-radius:11px;border:1px solid var(--line);
+  background:var(--panel2);
+}
+.export-bar span{font-size:.71rem;color:var(--muted);flex:1}
+</style>
+</head>
+<body>
+
+<!-- Welcome Modal -->
+<div class="modal-overlay" id="welcomeModal">
+  <div class="modal-box">
+    <h2>⬡ GaussLab‑AI 3D+</h2>
+    <p>Simulador interactivo de la <strong>Ley de Gauss en 3D</strong>. Explora superficies esféricas, cilíndricas, cúbicas y casos especiales con huecos excéntricos.</p>
+    <div class="modal-features">
+      <div class="modal-feat"><span class="feat-icon">🔵</span><strong>15+ escenarios</strong><br>desde carga puntual hasta conductores con cavidades</div>
+      <div class="modal-feat"><span class="feat-icon">📐</span><strong>Gráficos interactivos</strong><br>E(r), V(r), D(r) con cursor en tiempo real</div>
+      <div class="modal-feat"><span class="feat-icon">📚</span><strong>Deducción completa</strong><br>integrales y fórmulas paso a paso</div>
+      <div class="modal-feat"><span class="feat-icon">🧩</span><strong>Mini quiz</strong><br>preguntas adaptadas al escenario activo</div>
+    </div>
+    <p style="font-size:.73rem"><strong>Controles 3D:</strong> arrastre el fondo para rotar · rueda para zoom · active "Mover punto P" para explorar el campo.</p>
+    <div class="modal-footer">
+      <button class="secondary" onclick="document.getElementById('welcomeModal').remove()">Comenzar →</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+<header>
+  <div class="header-left">
+    <div class="logo-mark">⬡</div>
+    <div class="header-titles">
+      <h1><span id="titleMain">GaussLab‑AI 3D+</span> <span class="version-pill">v8.0</span></h1>
+      <div class="sub" id="subTitle">Tutor de Ley de Gauss · Prof. Wong · superficies esféricas, cilíndricas y cúbicas</div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <button id="resetCam" class="secondary" title="Restaurar vista de cámara">⟲ Recentrar</button>
+    <button id="quizBtn" class="secondary" title="Abrir quiz interactivo" onclick="toggleQuiz()">🧩 Quiz</button>
+    <button id="capture" title="Exportar imagen PNG">📷 PNG</button>
+  </div>
+</header>
+<main class="layout">
+  <section class="viewer" id="viewer">
+    <canvas id="scene" aria-label="Escena 3D de Ley de Gauss"></canvas>
+    <div class="hud">
+      <div class="hudTitle" id="hudTitle">Cargando…
+        <span class="region-badge region-outside" id="regionBadge">—</span>
+      </div>
+      <div class="hudRow">
+        <div class="metric" id="mQ"><span>q encerrada</span><strong id="hQ">—</strong></div>
+        <div class="metric" id="mFlux"><span>Flujo Φ<sub>E</sub></span><strong id="hFlux">—</strong></div>
+        <div class="metric highlight" id="mE"><span>Campo |E(P)|</span><strong id="hE">—</strong></div>
+        <div class="metric" id="mV"><span>Potencial V(P)</span><strong id="hV">—</strong></div>
+        <div class="metric" id="mFace"><span>Flujo cara</span><strong id="hFace">—</strong></div>
+      </div>
+    </div>
+    <div class="controlsTip">⟳ Arrastrar: rotar · Rueda: zoom · "Mover P": arrastra el punto blanco</div>
+    <div class="legend">
+      <div class="key"><i class="dot" style="background:var(--gold)"></i>Superficie gaussiana</div>
+      <div class="key"><i class="dot" style="background:var(--field)"></i>Campo E / líneas</div>
+      <div class="key"><i class="dot" style="background:var(--normal)"></i>Normal dA</div>
+      <div class="key"><i class="dot" style="background:var(--pos)"></i>Carga / ρ positiva</div>
+      <div class="key"><i class="dot" style="background:var(--matter)"></i>Dieléctrico / cavidad</div>
+      <div class="key"><i class="dot" style="background:#ff4fb8"></i>Equipotencial V = cte</div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card">
+      <h2><span class="card-num">1</span><span id="secModel">Modelo físico</span></h2>
+      <div class="grid2">
+        <label>Escenario<select id="scenario"></select></label>
+        <label>Idioma<select id="lang"><option value="es">Español</option><option value="en">English</option></select></label>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+        <label>Tema visual<select id="theme"></select></label>
+        <label><span id="lblLevel">Nivel</span><select id="level"><option value="school">Colegio</option><option value="university" selected>Universidad</option><option value="research">Doctorado</option></select></label>
+      </div>
+      <div id="validity" class="status" style="margin-top:9px"></div>
+    </section>
+
+    <section class="card">
+      <h2><span class="card-num">2</span><span id="secParameters">Parámetros SI</span></h2>
+      <div id="params"></div>
+      <div class="fine">Valores en nC, nC/m, nC/m² o nC/m³ por legibilidad; cálculo interno en SI.</div>
+    </section>
+
+    <section class="card">
+      <h2><span class="card-num">3</span><span id="secVisual">Visualización e interacción</span></h2>
+      <div class="controlHeading">Herramientas principales</div>
+      <div class="primaryTools">
+        <button type="button" id="graphToggleBig" class="bigToggle"><strong>Gráfico E(r)</strong><small>Muestra curva E, V o D con cursor</small></button>
+        <button type="button" id="movePToggleBig" class="bigToggle"><strong>Mover punto P</strong><small>Active y arrastre el punto blanco</small></button>
+        <button type="button" id="solidObjectBig" class="bigToggle"><strong>Sólido translúcido</strong><small>Esfera, cilindro o cubo semitransparente</small></button>
+        <button type="button" id="solidGaussBig" class="bigToggle"><strong>Sup. G. sólida</strong><small>Superficie gaussiana tenue y visible</small></button>
+        <button type="button" id="advancedBig" class="bigToggle"><strong>Modo avanzado</strong><small>Equipotenciales, V(r), E+V y sólido</small></button>
+        <button type="button" id="specialCasesBig" class="bigToggle"><strong>Casos especiales</strong><small>Huecos excéntricos: perfiles exactos</small></button>
+      </div>
+      <div class="controlHeading">Elementos visibles</div>
+      <div class="toggles" id="toggles"></div>
+      <div class="grid2" style="margin-top:10px">
+        <label><span id="lblTheta">Ángulo θ sobre S (°)</span><input id="theta" type="range" min="0" max="360" value="25"></label>
+        <label><span id="lblVectorScale">Escala vector E(P)</span><input id="vectorScale" type="range" min="25" max="145" value="75"></label>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+        <label><span id="lblLineDensity">Número de líneas 3D</span><input id="lineDensity" type="range" min="4" max="30" value="12"></label>
+        <label><span id="lblFieldColor">Paleta del campo E</span><select id="fieldStyle"><option value="softGreen">Verde suave</option><option value="sky">Celeste</option><option value="violet">Violeta</option><option value="orange">Naranja</option><option value="gray">Gris fino</option></select></label>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+        <label><span id="lblLineWidth">Grosor de vectores</span><input id="fieldWidth" type="range" min="0.6" max="3.0" step="0.1" value="1.2"></label>
+        <label><span id="lblSolidAlpha">Transparencia sólido</span><input id="solidAlpha" type="range" min="0.03" max="0.28" step="0.01" value="0.10"></label>
+      </div>
+      <div id="advancedPanel" class="grid2 hidden" style="margin-top:8px">
+        <label><span id="lblRenderMode">Estilo del sólido</span><select id="renderMode"><option value="mesh">Malla / wireframe</option><option value="solid">Sólido translúcido</option><option value="solidNoLines">Sólido s/ líneas</option></select></label>
+        <label><span id="lblQuantity">Magnitud graficada</span><select id="graphQuantity"><option value="E">E(r)</option><option value="V">V(r)</option><option value="EV">E y V</option><option value="D">D(r)</option></select></label>
+        <label><span id="lblPotentialRef">Referencia V alambres/cilindros</span><input id="vRefScale" type="range" min="100" max="320" value="200"></label>
+        <label><span id="lblEquipot">Superficies equipotenciales</span><select id="equipotentialMode"><option value="off">Off</option><option value="on">On</option></select></label>
+        <label><span id="lblEquipColor">Color equipotencial</span><select id="equipotentialColor"><option value="magenta">Magenta</option><option value="amber">Ámbar</option><option value="cyan">Cian</option><option value="white">Blanco</option></select></label>
+        <label><span id="lblGraphStart">Inicio de gráfica</span><select id="graphStartMode"><option value="gaussian">Desde rᵍ (exterior de esfera)</option><option value="nearZero">Cerca del origen (singularidad)</option></select></label>
+      </div>
+
+      <div id="specialPanel" class="specialPanel hidden">
+        <h3>Casos especiales · huecos excéntricos <span class="specialBadge">No radial</span></h3>
+        <div class="grid2">
+          <label>Modelo con hueco<select id="specialModel">
+            <option value="cavity_sphere_ins">Esfera aislante con hueco excéntrico</option>
+            <option value="cavity_cylinder_ins">Cilindro aislante con hueco excéntrico</option>
+            <option value="conductor_sphere_cavity">Conductor esférico con cavidad vacía</option>
+            <option value="conductor_cylinder_cavity">Conductor cilíndrico con cavidad vacía</option>
+          </select></label>
+          <label>Trayectoria del perfil<select id="profilePath">
+            <option value="xP">Paralela a x por P</option>
+            <option value="x">Eje x: O → O′</option>
+            <option value="yP">Paralela a y por P</option>
+            <option value="y">Eje y</option>
+            <option value="zP">Paralela a z por P</option>
+            <option value="z">Eje z</option>
+          </select></label>
+          <label>Magnitud exacta<select id="specialQuantity">
+            <option value="ExV">Eₓ y V</option>
+            <option value="EyV">Eᵧ y V</option>
+            <option value="EzV">E_z y V</option>
+            <option value="EmagV">|E| y V</option>
+            <option value="Ex">Eₓ</option>
+            <option value="Ey">Eᵧ</option>
+            <option value="Ez">E_z</option>
+            <option value="Emag">|E|</option>
+            <option value="V">V</option>
+          </select></label>
+          <label>Extensión del perfil<select id="profileSpan">
+            <option value="1.25">±1.25 a</option>
+            <option value="1.6" selected>±1.60 a</option>
+            <option value="2.0">±2.00 a</option>
+            <option value="2.6">±2.60 a</option>
+          </select></label>
+        </div>
+        <div class="fine"><b>Físicamente correcto:</b> el eje horizontal es <i>s</i> sobre la trayectoria. Dentro del hueco aislante E⃗ es uniforme y V es lineal.</div>
+      </div>
+
+      <div class="grid2" style="margin-top:8px">
+        <label><span id="lblGraphScale">Escala del gráfico</span><input id="graphScale" type="range" min="100" max="300" value="200"></label>
+        <label><span id="lblGraphMove">Ventana del gráfico</span><input id="graphWindowScale" type="range" min="80" max="160" value="100"></label>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+        <label id="faceWrap" class="hidden"><span id="lblFace">Cara del cubo</span><select id="faceSelect"></select></label>
+        <label><span id="lblGaussAlpha">Transparencia Sup. G.</span><input id="gaussAlpha" type="range" min="0.03" max="0.22" step="0.01" value="0.07"></label>
+      </div>
+      <div class="fine" style="margin-top:8px"><b>Gráfico E(r):</b> use el botón "Gráfico E(r)" arriba. En superficies cúbicas el concepto principal es el flujo por caras, no una curva radial.</div>
+    </section>
+
+    <section class="card">
+      <div class="tabs">
+        <button id="tabResult" class="tab active" data-tab="result">Resultado</button>
+        <button id="tabDerive" class="tab" data-tab="derive">Deducción</button>
+        <button id="tabGraph" class="tab" data-tab="graph">Gráfico</button>
+        <button id="tabRefs" class="tab" data-tab="refs">Fuentes</button>
+      </div>
+      <div id="result" class="panelTab"></div>
+      <div id="derive" class="panelTab hidden"></div>
+      <div id="graph" class="panelTab hidden">
+        <div id="graphCard" class="graphWrap hidden">
+          <div id="graphHeader" class="graphHeader"><span>📈 Gráfico interactivo</span><small>Arrastre para mover · esquina para redimensionar</small></div>
+          <canvas id="graphCanvas" width="450" height="300"></canvas>
+          <div id="graphTooltip" class="graphTooltip">Mueva el mouse sobre la gráfica.</div>
+          <div id="graphNote" class="graphNote"></div>
+        </div>
+        <div id="graphOff" class="fine">Pulse el botón <b>"Gráfico E(r)"</b> en la sección de Visualización, o el tab <b>Resultado</b>. Si el escenario no tiene simetría radial, el tutor explicará por qué no aplica.</div>
+      </div>
+      <div id="refs" class="panelTab hidden refs">
+        <ol>
+          <li>NIST, CODATA 2022: ε₀ = 8.854 187 8188 × 10⁻¹² F/m.</li>
+          <li>MIT OpenCourseWare 8.02: estrategia de Ley de Gauss — simetría, q<sub>enc</sub>, flujo y campo.</li>
+          <li>En medios dieléctricos: ∮<b>D</b>·d<b>A</b> = Q<sub>libre</sub>. Fuera del material E = D/ε₀; dentro, E = D/(ε₀ε<sub>r</sub>).</li>
+        </ol>
+      </div>
+
+      <!-- Quiz panel (toggled) -->
+      <div id="quizPanel" class="quiz-panel hidden">
+        <h4>🧩 <span id="quizTitle">Quiz · Ley de Gauss</span></h4>
+        <div id="quizContent"></div>
+        <div class="quiz-nav">
+          <button class="secondary" onclick="nextQuiz()" style="font-size:.7rem;padding:5px 10px">Siguiente →</button>
+          <span class="quiz-score" id="quizScore">0 / 0</span>
+        </div>
+      </div>
+    </section>
+  </aside>
+</main>
+</div>
+
+<script>
+const EPS0 = 8.8541878188e-12;
+const K = 1/(4*Math.PI*EPS0);
+const CV = document.getElementById('scene');
+const CTX = CV.getContext('2d');
+const GCV = document.getElementById('graphCanvas');
+const GCTX = GCV.getContext('2d');
+const $ = id => document.getElementById(id);
+const tr = (es,en)=> state.lang==='es'?es:en;
+const q = n => n*1e-9;
+const fmt = v => {
+  if(v===null || v===undefined || Number.isNaN(v)) return '—';
+  if(!Number.isFinite(v)) return '∞';
+  const a=Math.abs(v);
+  if(a===0) return '0';
+  if(a<1e-3 || a>=1e4) return v.toExponential(3);
+  return v.toFixed(4);
+};
+const sci = (v,u='') => `${fmt(v)} ${u}`.trim();
+
+const themes = {
+  dark:{bg:'#08111e',panel:'#0f1b2d',panel2:'#13233a',text:'#eef6ff',muted:'#9db3cc',line:'#29405f',accent:'#4fc3ff',accentText:'#07111c',gold:'#ffd761',field:'#42e992',normal:'#c48cff',pos:'#ff5a68',neg:'#5aa3ff',matter:'#26c3df',conductor:'#cfd7e4',warning:'#ffb020',danger:'#ff6270',ok:'#42d68d',graph:'#8df1ff',face:'#ff9f1c'},
+  light:{bg:'#f8fafc',panel:'#ffffff',panel2:'#f8fafc',text:'#0f172a',muted:'#64748b',line:'#dbe4ee',accent:'#0ea5e9',accentText:'#ffffff',gold:'#b45309',field:'#16a34a',normal:'#7c3aed',pos:'#dc2626',neg:'#2563eb',matter:'#0891b2',conductor:'#64748b',warning:'#d97706',danger:'#dc2626',ok:'#16a34a',graph:'#0ea5e9',face:'#f59e0b'},
+  board:{bg:'#183f2d',panel:'#214934',panel2:'#173a2a',text:'#f7f3de',muted:'#cbd8bb',line:'#4f7a5d',accent:'#fff8ca',accentText:'#1b3c2b',gold:'#ffe46b',field:'#f5f1df',normal:'#ffcf5a',pos:'#ff786b',neg:'#8fd3ff',matter:'#7ed9bc',conductor:'#d7dccd',warning:'#ffd166',danger:'#ff6b6b',ok:'#9ae66e',graph:'#fff8ca',face:'#ffa552'},
+  darkgrid:{bg:'#0b1220',panel:'#101b2c',panel2:'#132238',text:'#edf5ff',muted:'#9db1c9',line:'#31506c',accent:'#58c7ff',accentText:'#06111c',gold:'#ffd761',field:'#4ee391',normal:'#c995ff',pos:'#ff6574',neg:'#66aeff',matter:'#30c5df',conductor:'#ccd8e4',warning:'#ffb547',danger:'#ff6574',ok:'#48d989',graph:'#8ef0ff',face:'#ffad32'},
+  lightgrid:{bg:'#fbfcff',panel:'#ffffff',panel2:'#f7fbff',text:'#0d1726',muted:'#617085',line:'#c9d9ec',accent:'#1d75d8',accentText:'#ffffff',gold:'#a96500',field:'#158f47',normal:'#6f42c1',pos:'#c92934',neg:'#1d63c7',matter:'#078fae',conductor:'#687789',warning:'#c96b00',danger:'#d4283a',ok:'#149447',graph:'#1d75d8',face:'#e78a00'},
+  mit:{bg:'#f7f4f5',panel:'#ffffff',panel2:'#f3ebed',text:'#22222a',muted:'#6a6068',line:'#dec7cf',accent:'#a31f34',accentText:'#ffffff',gold:'#7a4b00',field:'#2b8a3e',normal:'#7d4ed8',pos:'#c1121f',neg:'#1d4ed8',matter:'#1597b8',conductor:'#8b95a7',warning:'#b45309',danger:'#be123c',ok:'#15803d',graph:'#2d6cdf',face:'#c95b00'},
+  neon:{bg:'#060814',panel:'#0f1330',panel2:'#171d44',text:'#f1f7ff',muted:'#b1b8ff',line:'#2e387c',accent:'#6ef3ff',accentText:'#041218',gold:'#ffd86e',field:'#4cff98',normal:'#ff8cf0',pos:'#ff6c89',neg:'#67adff',matter:'#2be7ff',conductor:'#d9deff',warning:'#ffbf69',danger:'#ff5d73',ok:'#33e2a5',graph:'#9ff3ff',face:'#ffb84d'},
+  paper:{bg:'#efe7d4',panel:'#fffaf0',panel2:'#f8f0df',text:'#2a2117',muted:'#6f604c',line:'#d4c1a2',accent:'#8b5e34',accentText:'#ffffff',gold:'#7a4b00',field:'#3b7f4b',normal:'#8a56c6',pos:'#b83b3b',neg:'#3467c1',matter:'#1b8ca8',conductor:'#8e8c88',warning:'#b07b14',danger:'#b33245',ok:'#2d7a4a',graph:'#1f6aa5',face:'#c16a14'},
+  geogebra:{bg:'#eef6ff',panel:'#ffffff',panel2:'#f4f9ff',text:'#122033',muted:'#5a6f88',line:'#c4d8ef',accent:'#2563eb',accentText:'#ffffff',gold:'#8b5e00',field:'#129356',normal:'#8b5cf6',pos:'#ef4444',neg:'#2563eb',matter:'#06b6d4',conductor:'#7c8798',warning:'#d97706',danger:'#e11d48',ok:'#16a34a',graph:'#2563eb',face:'#c06c00'},
+  graphite:{bg:'#111315',panel:'#1a1d21',panel2:'#232830',text:'#f3f5f6',muted:'#afb6bd',line:'#3a414b',accent:'#7ac7ff',accentText:'#07111c',gold:'#f2c66d',field:'#7cf0a7',normal:'#d39cff',pos:'#ff7b88',neg:'#8ab8ff',matter:'#5fd3df',conductor:'#d7dadd',warning:'#ffc14d',danger:'#ff6b77',ok:'#6dd7a1',graph:'#7ac7ff',face:'#ffae42'},
+  copper:{bg:'#211916',panel:'#2d221e',panel2:'#3b2e29',text:'#fff7f0',muted:'#d0b7a8',line:'#6f5347',accent:'#ffb26a',accentText:'#2a180a',gold:'#ffd89a',field:'#74d19d',normal:'#d3a4ff',pos:'#ff7d72',neg:'#7fb2ff',matter:'#6ad9d9',conductor:'#d4cfc9',warning:'#ffc24a',danger:'#ff6d71',ok:'#71d69f',graph:'#ffcf91',face:'#ff9a3d'}
+};
+
+const faceOptions = [
+  {id:'+x', es:'+x (cara derecha)', en:'+x (right face)'},
+  {id:'-x', es:'-x (cara izquierda)', en:'-x (left face)'},
+  {id:'+y', es:'+y (cara superior)', en:'+y (top face)'},
+  {id:'-y', es:'-y (cara inferior)', en:'-y (bottom face)'},
+  {id:'+z', es:'+z (cara frontal)', en:'+z (front face)'},
+  {id:'-z', es:'-z (cara posterior)', en:'-z (back face)'}
+];
+
+const defs = {
+  point_center:{es:'Carga puntual en el centro de una esfera gaussiana',en:'Point charge at the center of a Gaussian sphere', params:['Q','rg']},
+  point_offset:{es:'Carga puntual descentrada dentro de esfera gaussiana',en:'Off-center point charge inside Gaussian sphere', params:['Q','rg','d']},
+  ins_sphere:{es:'Esfera aislante maciza con ρ uniforme',en:'Solid insulating sphere with uniform ρ', params:['rho','a','rg']},
+  dielectric_sphere:{es:'Esfera dieléctrica con ρ libre uniforme',en:'Dielectric sphere with uniform free ρ', params:['rho','a','rg','epsr']},
+  shell_sphere:{es:'Cáscara esférica delgada cargada',en:'Thin charged spherical shell', params:['Q','a','rg']},
+  conductor_sphere:{es:'Esfera conductora cargada',en:'Charged conducting sphere', params:['Q','a','rg']},
+  conductor_sphere_cavity:{es:'Conductor esférico con cavidad excéntrica vacía',en:'Spherical conductor with eccentric empty cavity', params:['Q','a','b','d','rg']},
+  cavity_sphere_ins:{es:'Esfera aislante cargada con hueco esférico excéntrico',en:'Charged insulating sphere with eccentric spherical cavity', params:['rho','a','b','d','rg']},
+  infinite_wire:{es:'Línea infinita y cilindro gaussiano',en:'Infinite line and Gaussian cylinder', params:['lambda','L','rg']},
+  finite_wire:{es:'Alambre finito (contraejemplo de simetría)',en:'Finite wire (symmetry counterexample)', params:['lambda','L','ell','rg']},
+  ins_cylinder:{es:'Cilindro aislante infinito con ρ uniforme',en:'Infinite insulating cylinder with uniform ρ', params:['rho','a','L','rg']},
+  dielectric_cylinder:{es:'Cilindro dieléctrico infinito con ρ libre uniforme',en:'Infinite dielectric cylinder with uniform free ρ', params:['rho','a','L','rg','epsr']},
+  conductor_cylinder:{es:'Cascarón cilíndrico conductor',en:'Conducting cylindrical shell', params:['lambda','a','L','rg']},
+  cavity_cylinder_ins:{es:'Cilindro aislante con hueco cilíndrico excéntrico',en:'Insulating cylinder with eccentric cylindrical cavity', params:['rho','a','b','d','L','rg']},
+  conductor_cylinder_cavity:{es:'Conductor cilíndrico con hueco excéntrico vacío',en:'Conducting cylinder with eccentric empty cavity', params:['lambda','a','b','d','L','rg']},
+  cube_center:{es:'Superficie gaussiana cúbica con carga en el centro',en:'Cubic Gaussian surface with central charge', params:['Q','acube']},
+  cube_vertex:{es:'Superficie gaussiana cúbica con carga en un vértice',en:'Cubic Gaussian surface with a vertex charge', params:['Q','acube']}
+};
+
+const paramMeta = {
+  Q:{es:'Carga Q', en:'Charge Q', unit:'nC', min:-30, max:30, step:1, def:10},
+  rg:{es:'Radio/escala gaussiana r_g', en:'Gaussian radius/scale r_g', unit:'m', min:0.35, max:4.0, step:0.05, def:1.6},
+  d:{es:'Desplazamiento del hueco/carga d', en:'Cavity/charge offset d', unit:'m', min:0.0, max:1.8, step:0.05, def:0.55},
+  a:{es:'Radio físico a', en:'Physical radius a', unit:'m', min:0.3, max:2.0, step:0.05, def:1.0},
+  b:{es:'Radio del hueco b', en:'Cavity radius b', unit:'m', min:0.15, max:1.0, step:0.05, def:0.35},
+  rho:{es:'Densidad volumétrica rho', en:'Volume density rho', unit:'nC/m³', min:-40, max:40, step:1, def:10},
+  epsr:{es:'Permitividad relativa epsilon_r', en:'Relative permittivity epsilon_r', unit:'', min:1.0, max:10.0, step:0.1, def:3.0},
+  lambda:{es:'Densidad lineal lambda', en:'Linear density lambda', unit:'nC/m', min:-40, max:40, step:1, def:8},
+  L:{es:'Longitud gaussiana L', en:'Gaussian length L', unit:'m', min:0.6, max:5.0, step:0.1, def:2.4},
+  ell:{es:'Longitud física ell', en:'Physical length ell', unit:'m', min:0.5, max:5.0, step:0.1, def:2.0},
+  acube:{es:'Lado del cubo a', en:'Cube side a', unit:'m', min:0.6, max:3.2, step:0.1, def:2.0}
+};
+
+const baseParams = {};
+for (const k in defs){
+  baseParams[k] = {};
+  defs[k].params.forEach(p=> baseParams[k][p]=paramMeta[p].def);
+}
+baseParams.cavity_sphere_ins.rg = 0.20;
+baseParams.cavity_cylinder_ins.rg = 0.20;
+
+const state = {
+  lang:'es', theme:'dark', level:'university', scenario:'point_center',
+  yaw:0.65, pitch:0.42, zoom:1.05, theta:25, vectorScale:75, graphScale:200, lineDensity:12, fieldWidth:1.2, solidAlpha:0.10, gaussAlpha:0.07, fieldStyle:'softGreen', graphQuantity:'E', graphCursor:null, renderMode:'mesh', vRefScale:200, graphWindowScale:100, equipotentialColor:'magenta', graphStartMode:'gaussian',
+  selectedFace:'+x',
+  show:{field:true, gaussian:true, normals:true, charges:true, labels:true, axes:true, point:true, expressions:true, graph:false, moveP:false, solidObject:false, solidGaussian:false, equipotential:false, advanced:false},
+  params: JSON.parse(JSON.stringify(baseParams)),
+  P:[1.2,0.35,0],
+  projectedP:null,
+  dragMode:null
+};
+
+let palette = themes.dark;
+let DPR=1,W=0,H=0, primitives=[];
+
+function applyTheme(name){
+  palette = themes[name];
+  for(const [k,v] of Object.entries(palette)) document.documentElement.style.setProperty('--'+k, v);
+  draw(); drawGraph();
+}
+
+function fillSelectors(){
+  const sc = $('scenario'); sc.innerHTML='';
+  Object.entries(defs).forEach(([id,def])=>{
+    const o=document.createElement('option'); o.value=id; o.textContent=def[state.lang]; sc.appendChild(o);
+  });
+  sc.value=state.scenario;
+  const th = $('theme'); th.innerHTML='';
+  const themeNames = {dark:'Laboratorio oscuro',light:'Claro',board:'Pizarra verde',darkgrid:'Oscuro cuadriculado',lightgrid:'Claro cuadriculado',mit:'MIT rojo',neon:'Campo neón',paper:'Papel académico',geogebra:'GeoGebra',graphite:'Grafito',copper:'Cobre'};
+  Object.keys(themes).forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent=themeNames[id]||id;th.appendChild(o);});
+  th.value=state.theme;
+  const fs = $('faceSelect'); fs.innerHTML='';
+  faceOptions.forEach(f=>{const o=document.createElement('option');o.value=f.id;o.textContent=state.lang==='es'?f.es:f.en; fs.appendChild(o);});
+  fs.value=state.selectedFace;
+}
+
+function renderParams(){
+  const host = $('params'); host.innerHTML='';
+  defs[state.scenario].params.forEach(pid=>{
+    const m = paramMeta[pid], val = state.params[state.scenario][pid];
+    const wrap = document.createElement('div'); wrap.className='param';
+    wrap.innerHTML = `<div class="paramTop"><span>${m.es}</span><span class="value" id="v_${pid}">${val} ${m.unit}</span></div><input data-p="${pid}" type="range" min="${m.min}" max="${m.max}" step="${m.step}" value="${val}">`;
+    host.appendChild(wrap);
+  });
+  host.querySelectorAll('input[data-p]').forEach(inp=>inp.oninput=e=>{
+    const p=e.target.dataset.p; state.params[state.scenario][p]=Number(e.target.value); const m=paramMeta[p]; $(`v_${p}`).textContent=`${e.target.value} ${m.unit}`.trim(); clampPoint(); updateAll();
+  });
+  $('faceWrap').classList.toggle('hidden', !['cube_center','cube_vertex'].includes(state.scenario));
+}
+
+function renderToggles(){
+  const labels = {
+    field:['Campo / Field','Field'], gaussian:['Superficie gaussiana','Gaussian surface'], normals:['Normal dA','Normal dA'], charges:['Cargas / ρ','Charges / ρ'], labels:['Etiquetas','Labels'], axes:['Ejes','Axes'], point:['Punto P','Point P'], moveP:['Mover punto P','Move point P'], expressions:['Expresiones','Expressions'], graph:['Gráfico E(r)','E(r) graph']
+  };
+  const host=$('toggles'); host.innerHTML='';
+  ['field','gaussian','normals','charges','labels','axes','point','expressions','equipotential'].forEach(k=>{
+    const b=document.createElement('button'); b.type='button'; b.className='toggle'+(state.show[k]?' on':''); b.textContent=labels[k][0];
+    b.onclick=()=>{ state.show[k]=!state.show[k]; b.classList.toggle('on',state.show[k]); updateAll(); };
+    host.appendChild(b);
+  });
+}
+
+function syncPrimaryButtons(){
+  const gb=$('graphToggleBig'), pb=$('movePToggleBig');
+  if(gb){ gb.classList.toggle('on',state.show.graph); gb.querySelector('strong').textContent = state.show.graph ? 'Ocultar gráfico E(r)' : 'Mostrar gráfico E(r)'; }
+  if(pb){ pb.classList.toggle('on',state.show.moveP); pb.querySelector('strong').textContent = state.show.moveP ? 'Mover punto P: activado' : 'Mover punto P'; }
+}
+
+function openTab(id){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  document.querySelectorAll('.panelTab').forEach(p=>p.classList.toggle('hidden',p.id!==id));
+  if(id==='graph') drawGraph();
+}
+
+function setDefaultPoint(){
+  const id=state.scenario, p=state.params[id];
+  if(id.includes('wire') || id.includes('cylinder')) state.P=[Math.max(0.4, p.rg || p.a || 1.0),0,0.25];
+  else if(id==='cube_vertex') state.P=[0.8,0.8,0.8];
+  else state.P=[Math.max(0.45, (p.rg||p.a||1.0)*0.8),0.3,0];
+  clampPoint();
+}
+
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function vadd(a,b){return a.map((x,i)=>x+b[i]);}
+function vsub(a,b){return a.map((x,i)=>x-b[i]);}
+function vmul(a,s){return a.map(x=>x*s);}
+function dot(a,b){return a.reduce((s,x,i)=>s+x*b[i],0);}
+function norm(a){return Math.hypot(...a);}
+function unit(a){const n=norm(a)||1; return a.map(x=>x/n);}
+function cross(a,b){return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];}
+
+function radialSphereField(Q, pos, P){
+  const rvec=vsub(P,pos), r=norm(rvec);
+  if(r<1e-8) return {E:Infinity,vec:[0,0,0]};
+  const E=K*q(Q)/(r*r);
+  return {E:Math.abs(E), vec:vmul(unit(rvec), Math.sign(Q||1)*Math.abs(E))};
+}
+
+function calc(){
+  const id=state.scenario, p=state.params[id], P=state.P.slice();
+  let qenc=0, flux=0, E=0, D=null, faceFlux=null, region='', warning='', valid=true, msg='', derive='', formula='', graphInfo=null;
+  let eVec=[1,0,0], gaussCenter=[0,0,0], point=P.slice();
+  const r=norm(P), rho=Math.hypot(P[0],P[2]), th=state.theta*Math.PI/180;
+  const chargePos = id==='point_offset' ? [p.d,0,0] : [0,0,0];
+  const radial = vec => norm(vec)<1e-10 ? [1,0,0] : unit(vec);
+
+  if(id==='point_center'){
+    qenc=q(p.Q); flux=qenc/EPS0; const ef = radialSphereField(p.Q,[0,0,0],P); E=ef.E; eVec=ef.vec; region=tr('Campo de carga puntual','Point-charge field'); formula=`Φ = Q/ε₀\nE(P) = k|Q|/r²`; derive=tr('La esfera gaussiana contiene toda la carga. Por simetría esférica, si la superficie está centrada en la carga entonces E es constante sobre S y es radial.','The Gaussian sphere encloses the whole charge. By spherical symmetry, if the surface is centered on the charge then E is constant over S and radial.');
+    graphInfo={kind:'spherePoint', xLabel:'r (m)', max:Math.max((p.rg||1)*3.0, 4.2), breaks:[0], f:x=> K*Math.abs(q(p.Q))/(x*x), fV:x=> K*Math.abs(q(p.Q))/x, note:tr('Curva tipo 1/r²; fuera de una esfera cargada puntual o concentrada tiene la misma dependencia radial.','1/r² curve; outside a concentrated or spherical charge it has the same radial dependence.')};
+  }
+  if(id==='point_offset'){
+    qenc=(norm(chargePos)<p.rg)?q(p.Q):0; flux=qenc/EPS0; const ef = radialSphereField(p.Q,chargePos,P); E=ef.E; eVec=ef.vec; region=tr('Flujo sí, simetría insuficiente para E sobre S','Flux yes, symmetry insufficient for E on S'); warning=tr('La esfera gaussiana sigue dando Φ = Qenc/ε₀, pero E no es uniforme en la superficie: no use EA = Q/ε₀.','The Gaussian sphere still gives Φ = Qenc/ε₀, but E is not uniform on the surface: do not use EA = Q/ε₀.'); formula=`Φ = Qenc/ε₀\nE(P): campo exacto de Coulomb respecto a la carga descentrada`; derive=warning;
+  }
+  if(id==='ins_sphere'){
+    const rhoSI=q(p.rho); const rr=r;
+    qenc = rhoSI*(4*Math.PI/3)*Math.min(p.rg,p.a)**3; flux=qenc/EPS0;
+    if(rr<p.a){E=Math.abs(rhoSI)*rr/(3*EPS0); eVec=vmul(radial(P),Math.sign(rhoSI||1)*E); region=tr('Interior: r < a','Inside: r < a');}
+    else {E=Math.abs(rhoSI)*p.a**3/(3*EPS0*rr*rr); eVec=vmul(radial(P),Math.sign(rhoSI||1)*E); region=tr('Exterior: r > a','Outside: r > a');}
+    formula=`r < a:  E(r) = ρ r /(3 ε₀)\nr ≥ a: E(r) = ρ a³ /(3 ε₀ r²)`;
+    derive=tr('Dentro de una esfera aislante uniforme, la carga encerrada crece como r³ y el área como r², por eso E ∝ r. Fuera, el sistema equivale a una carga puntual total en el centro.','Inside a uniform insulating sphere, enclosed charge grows as r³ and area as r², hence E ∝ r. Outside, the system behaves like a point charge at the center.');
+    graphInfo={kind:'insSphere', xLabel:'r (m)', max:Math.max(p.a*2.8,4), breaks:[p.a], f:x=> x<p.a ? Math.abs(rhoSI)*x/(3*EPS0) : Math.abs(rhoSI)*p.a**3/(3*EPS0*x*x), fV:x=> x<p.a ? Math.abs(rhoSI)*(3*p.a*p.a-x*x)/(6*EPS0) : Math.abs(rhoSI)*p.a**3/(3*EPS0*x), note:tr('Recta dentro; cola 1/r² fuera. El potencial es continuo y suave en r=a.','Linear inside; 1/r² outside. Potential is continuous and smooth at r=a.')};
+  }
+  if(id==='dielectric_sphere'){
+    const rhoSI=q(p.rho); const rr=r;
+    const qfreeG = rhoSI*(4*Math.PI/3)*Math.min(p.rg,p.a)**3;
+    const qfreeTotal = rhoSI*(4*Math.PI/3)*p.a**3;
+    qenc = p.rg < p.a ? qfreeG/p.epsr : qfreeTotal; flux=qenc/EPS0;
+    if(rr<p.a){ D=Math.abs(rhoSI)*rr/3; E=Math.abs(D)/(EPS0*p.epsr); region=tr('Dentro del dieléctrico','Inside dielectric'); }
+    else { D=Math.abs(rhoSI)*p.a**3/(3*rr*rr); E=Math.abs(D)/EPS0; region=tr('Exterior al material (vacío)','Outside material (vacuum)'); }
+    eVec=vmul(radial(P),Math.sign(rhoSI||1)*E);
+    warning=tr('Modelo dieléctrico real: D_n es continuo en r=a si no hay carga libre superficial, pero E_n salta porque cambia la permitividad. Para la curva continua típica del texto, seleccione “Esfera aislante maciza”.','Physical dielectric model: D_n is continuous at r=a with no free surface charge, but E_n jumps because permittivity changes. For the textbook continuous curve, select “Solid insulating sphere”.');
+    formula=`r < a:  D(r)=rho_libre r /3,   E(r)=rho_libre r /(3 epsilon_0 epsilon_r)
+r ≥ a: D(r)=rho_libre a^3 /(3 r^2), E(r)=D/epsilon_0
+En r=a: D_n continuo; E_fuera = epsilon_r E_dentro`;
+    derive=warning;
+    graphInfo={kind:'dielectricSphere', xLabel:'r (m)', max:Math.max(p.a*2.8,4), breaks:[p.a], discontinuous:[p.a], f:x=> x<p.a ? Math.abs(rhoSI)*x/(3*EPS0*p.epsr) : Math.abs(rhoSI)*p.a**3/(3*EPS0*x*x), fD:x=> x<p.a ? Math.abs(rhoSI)*x/3 : Math.abs(rhoSI)*p.a**3/(3*x*x), fV:x=> {const Va=Math.abs(rhoSI)*p.a*p.a/(3*EPS0); return x<p.a ? Va + Math.abs(rhoSI)*(p.a*p.a-x*x)/(6*EPS0*p.epsr) : Math.abs(rhoSI)*p.a**3/(3*EPS0*x);}, note:tr('E cambia de pendiente y puede presentar salto en r=a; D permanece continuo. La gráfica se dibuja por tramos, sin “garfio”.','E changes slope and may jump at r=a; D remains continuous. The plot is drawn piecewise, without an artificial hook.')};
+  }
+  if(id==='shell_sphere' || id==='conductor_sphere'){
+    const rr=r; qenc = p.rg>p.a ? q(p.Q):0; flux=qenc/EPS0;
+    if(rr<p.a){E=0; region=tr('Interior: r < a','Inside: r < a'); eVec=[1,0,0];}
+    else {E=Math.abs(K*q(p.Q)/(rr*rr)); eVec=vmul(radial(P), Math.sign(p.Q||1)*E); region=tr('Exterior: r > a','Outside: r > a');}
+    formula=`r < a:  E(r)=0\nr ≥ a: E(r)=k|Q|/r²`;
+    derive=id==='conductor_sphere'?tr('En equilibrio electrostático, un conductor tiene E=0 en el interior del material.','At electrostatic equilibrium, a conductor has E=0 inside the material.'):tr('Para una cáscara esférica uniforme, el campo interno se anula por simetría.','For a uniform spherical shell, the internal field cancels by symmetry.');
+    graphInfo={kind:'shellSphere', xLabel:'r (m)', max:Math.max(p.a*2.8,4), breaks:[p.a], discontinuous:[p.a], f:x=> x<p.a ? 0 : Math.abs(K*q(p.Q)/(x*x)), fV:x=> x<p.a ? Math.abs(K*q(p.Q)/p.a) : Math.abs(K*q(p.Q)/x), note:tr('Campo nulo dentro; fuera cae como 1/r². El potencial es constante dentro.','Zero field inside; outside it falls as 1/r². Potential is constant inside.')};
+  }
+  if(id==='conductor_sphere_cavity'){
+    const rr=r, c=[p.d,0,0], inCavity=norm(vsub(P,c))<p.b;
+    qenc = p.rg>p.a ? q(p.Q):0; flux=qenc/EPS0;
+    if(rr>p.a){E=Math.abs(K*q(p.Q)/(rr*rr)); eVec=vmul(radial(P),Math.sign(p.Q||1)*E); region=tr('Exterior del conductor','Outside conductor');}
+    else {E=0; eVec=[1,0,0]; region=inCavity?tr('Dentro de cavidad vacía protegida','Inside shielded empty cavity'):tr('Dentro del metal conductor','Inside conductor metal');}
+    formula=`r > a: E(r)=k|Q|/r²\nEn el metal y en la cavidad vacía: E=0`;
+    derive=tr('Una cavidad cerrada sin carga interna, dentro de un conductor ideal en equilibrio electrostático, permanece apantallada: E=0 incluso si está descentrada.','A closed cavity with no internal charge, inside an ideal electrostatic conductor, remains shielded: E=0 even if off-center.');
+    graphInfo={kind:'condSphereCavity', xLabel:'r (m)', max:Math.max(p.a*2.8,4), breaks:[p.a], discontinuous:[p.a], f:x=> x<p.a ? 0 : Math.abs(K*q(p.Q)/(x*x)), fV:x=> x<p.a ? Math.abs(K*q(p.Q)/p.a) : Math.abs(K*q(p.Q)/x), note:tr('Gráfico radial respecto al centro del conductor.','Radial graph with respect to conductor center.')};
+  }
+  if(id==='cavity_sphere_ins'){
+    const rhoSI=q(p.rho), c=[p.d,0,0], inside = norm(vsub(P,c))<p.b;
+    if(p.d+p.b >= p.a){ valid=false; msg=tr('Geometría inválida: se requiere d + b < a para que el hueco quede dentro de la esfera.','Invalid geometry: require d + b < a so the cavity stays inside the sphere.'); }
+    else if(p.rg >= p.b){ valid=false; msg=tr('Superficie gaussiana inválida para el hueco: se requiere r_g < b para que S quede totalmente en la cavidad.','Invalid Gaussian surface for the cavity: require r_g < b so S lies entirely in the cavity.'); }
+    else {
+      qenc = rhoSI*(4*Math.PI/3)*(p.rg**3 - p.rg**3); flux=0;
+      if(inside){ E=Math.abs(rhoSI)*p.d/(3*EPS0); eVec=[Math.sign(rhoSI||1)*Math.sign(p.d||1),0,0].map(x=>x*E); region=tr('Dentro del hueco esférico','Inside spherical cavity'); }
+      else { const rr=norm(P); if(rr<p.a){ E=Math.abs(rhoSI)*rr/(3*EPS0); eVec=vmul(radial(P),Math.sign(rhoSI||1)*E); region=tr('Dentro del material aislante','Inside insulating material'); } else { E=Math.abs(rhoSI)*p.a**3/(3*EPS0*rr*rr); eVec=vmul(radial(P),Math.sign(rhoSI||1)*E); region=tr('Exterior del objeto','Outside object'); } }
+      warning=tr('En una superficie gaussiana completamente dentro del hueco: Qenc = 0 y Φ = 0, pero E puede ser distinto de 0.','For a Gaussian surface entirely inside the cavity: Qenc = 0 and Φ = 0, but E may be nonzero.');
+      formula=`Dentro del hueco: E = ρ d /(3 ε₀)  (uniforme)\nPara S ⊂ hueco: Qenc=0, Φ=0`;
+      derive=tr('Por superposición, el hueco equivale a sumar una esfera positiva de densidad ρ y otra negativa de densidad −ρ centrada en el hueco. Dentro del hueco resulta un campo uniforme.','By superposition, the cavity is modeled as a positive sphere of density ρ plus a negative sphere of density −ρ centered at the cavity. Inside the cavity the result is a uniform field.');
+    }
+  }
+  if(id==='infinite_wire'){
+    qenc=q(p.lambda)*p.L; flux=qenc/EPS0; if(rho<1e-8){E=Infinity;eVec=[0,0,0];} else {E=Math.abs(q(p.lambda)/(2*Math.PI*EPS0*rho)); eVec=[P[0],0,P[2]].map(x=>x/rho*Math.sign(p.lambda||1)*E);} region=tr('Simetría cilíndrica ideal','Ideal cylindrical symmetry'); formula=`Qenc = λL\nE(ρ) = |λ| /(2π ε₀ ρ)`; derive=tr('La dirección de E y de dA sobre la superficie lateral es radial; por eso el vector de muestra se dibuja perpendicular al cilindro.','The directions of E and dA on the lateral surface are radial; therefore the sample vector is drawn perpendicular to the cylinder.'); graphInfo={kind:'wire', xLabel:'ρ (m)', max:Math.max(p.rg*2.8,4), breaks:[0], f:x=> Math.abs(q(p.lambda)/(2*Math.PI*EPS0*x)), fV:x=> {const Rref=Math.max(p.rg*2.8,4)*(state.vRefScale/200); return Math.abs(q(p.lambda)/(2*Math.PI*EPS0))*Math.log(Rref/x);}, note:tr('Curva 1/ρ. Para V se usa una referencia V(Rref)=0.','1/ρ curve. For V a reference V(Rref)=0 is used.')};
+  }
+  if(id==='finite_wire'){
+    const lam=q(p.lambda), rr=Math.max(rho,1e-8), ell=p.ell; qenc=lam*Math.min(p.L,ell); flux=qenc/EPS0; E=Math.abs(K*lam*ell/(rr*Math.sqrt(rr*rr+(ell/2)**2))); eVec=[P[0],0,P[2]].map(x=>x/rr*Math.sign(p.lambda||1)*E); region=tr('Alambre finito: simetría insuficiente','Finite wire: insufficient symmetry'); warning=tr('Este caso se incluye para mostrar un error común: aunque el flujo sigue siendo Qenc/ε₀, la superficie gaussiana cilíndrica ya no permite despejar E por simetría.','This case shows a common mistake: although flux is still Qenc/ε₀, the cylindrical Gaussian surface no longer lets you solve E by symmetry.'); formula=`E(P, plano medio) = k |λ| ℓ / [ρ √(ρ² + (ℓ/2)²)]`; derive=warning;
+  }
+  if(id==='ins_cylinder'){
+    const rhoSI=q(p.rho);
+    qenc = rhoSI*Math.PI*Math.min(p.rg,p.a)**2*p.L; flux=qenc/EPS0;
+    if(rho<p.a){ E=Math.abs(rhoSI)*rho/(2*EPS0); region=tr('Interior: ρ < a','Inside: ρ < a'); }
+    else { E=Math.abs(rhoSI)*p.a**2/(2*EPS0*rho); region=tr('Exterior: ρ > a','Outside: ρ > a'); }
+    eVec = rho<1e-8 ? [0,0,0] : [P[0],0,P[2]].map(x=>x/rho*Math.sign(p.rho||1)*E);
+    formula=`ρ < a:  E(ρ)=ρvol ρ /(2 ε₀)\nρ ≥ a: E(ρ)=ρvol a² /(2 ε₀ ρ)`;
+    derive=tr('En cilindros infinitos, la carga encerrada crece como ρ² y el área lateral como ρ, por eso E ∝ ρ dentro del material.','For infinite cylinders, enclosed charge grows as ρ² while lateral area grows as ρ, hence E ∝ ρ inside the material.');
+    graphInfo={kind:'insCylinder', xLabel:'ρ (m)', max:Math.max(p.a*2.8,4), breaks:[p.a], f:x=> x<p.a ? Math.abs(rhoSI)*x/(2*EPS0) : Math.abs(rhoSI)*p.a**2/(2*EPS0*x), fV:x=> {const Rref=Math.max(p.a*2.8,4)*(state.vRefScale/200); const Va=Math.abs(rhoSI)*p.a*p.a/(2*EPS0)*Math.log(Rref/p.a); return x<p.a ? Va + Math.abs(rhoSI)*(p.a*p.a-x*x)/(4*EPS0) : Math.abs(rhoSI)*p.a*p.a/(2*EPS0)*Math.log(Rref/x);}, note:tr('Recta dentro; 1/ρ fuera. V se toma respecto a un radio de referencia.','Linear inside; 1/ρ outside. V is referenced to a chosen radius.')};
+  }
+  if(id==='dielectric_cylinder'){
+    const rhoSI=q(p.rho);
+    if(rho<p.a){ D=Math.abs(rhoSI)*rho/2; E=Math.abs(D)/(EPS0*p.epsr); region=tr('Dentro del dieléctrico','Inside dielectric'); }
+    else { D=Math.abs(rhoSI)*p.a**2/(2*rho); E=Math.abs(D)/EPS0; region=tr('Exterior al material (vacío)','Outside material (vacuum)'); }
+    const qfreeG = rhoSI*Math.PI*Math.min(p.rg,p.a)**2*p.L;
+    const qfreeTotal = rhoSI*Math.PI*p.a**2*p.L;
+    qenc = p.rg < p.a ? qfreeG/p.epsr : qfreeTotal; flux=qenc/EPS0;
+    eVec = rho<1e-8 ? [0,0,0] : [P[0],0,P[2]].map(x=>x/rho*Math.sign(p.rho||1)*E);
+    warning=tr('Modelo dieléctrico real: D_n es continuo en rho=a sin carga libre superficial; E_n cambia al cruzar hacia el vacío.','Physical dielectric model: D_n is continuous at rho=a without free surface charge; E_n changes on crossing into vacuum.');
+    formula=`rho < a: D=rho_libre rho/2, E=rho_libre rho/(2 epsilon_0 epsilon_r)
+rho ≥ a: D=rho_libre a^2/(2rho), E=D/epsilon_0
+En rho=a: D_n continuo; E_fuera = epsilon_r E_dentro`;
+    derive=warning;
+    graphInfo={kind:'dielCylinder', xLabel:'ρ (m)', max:Math.max(p.a*2.8,4), breaks:[p.a], discontinuous:[p.a], f:x=> x<p.a ? Math.abs(rhoSI)*x/(2*EPS0*p.epsr) : Math.abs(rhoSI)*p.a**2/(2*EPS0*x), fD:x=> x<p.a ? Math.abs(rhoSI)*x/2 : Math.abs(rhoSI)*p.a**2/(2*x), fV:x=> {const Rref=Math.max(p.a*2.8,4)*(state.vRefScale/200); const Va=Math.abs(rhoSI)*p.a*p.a/(2*EPS0)*Math.log(Rref/p.a); return x<p.a ? Va + Math.abs(rhoSI)*(p.a*p.a-x*x)/(4*EPS0*p.epsr) : Math.abs(rhoSI)*p.a*p.a/(2*EPS0)*Math.log(Rref/x);}, note:tr('E y V se muestran por tramos; D permanece continuo.','E and V are shown piecewise; D remains continuous.')};
+  }
+  if(id==='conductor_cylinder'){
+    qenc = p.rg>p.a ? q(p.lambda)*p.L : 0; flux=qenc/EPS0;
+    if(rho<p.a){E=0; region=tr('Interior del conductor','Inside conductor'); eVec=[1,0,0];}
+    else {E=Math.abs(q(p.lambda)/(2*Math.PI*EPS0*rho)); eVec=[P[0],0,P[2]].map(x=>x/rho*Math.sign(p.lambda||1)*E); region=tr('Exterior del conductor','Outside conductor');}
+    formula=`ρ < a: E(ρ)=0\nρ ≥ a: E(ρ)=|λ| /(2π ε₀ ρ)`;
+    derive=tr('En un conductor cilíndrico ideal en equilibrio, el campo en el interior del material o del hueco vacío es nulo.','In an ideal conducting cylinder at equilibrium, the field inside the material or inside an empty cavity is zero.');
+    graphInfo={kind:'condCylinder', xLabel:'ρ (m)', max:Math.max(p.a*2.8,4), breaks:[p.a], discontinuous:[p.a], f:x=> x<p.a ? 0 : Math.abs(q(p.lambda)/(2*Math.PI*EPS0*x)), fV:x=> {const Rref=Math.max(p.a*2.8,4)*(state.vRefScale/200); const Va=Math.abs(q(p.lambda)/(2*Math.PI*EPS0))*Math.log(Rref/p.a); return x<p.a ? Va : Math.abs(q(p.lambda)/(2*Math.PI*EPS0))*Math.log(Rref/x);}, note:tr('Cero adentro; 1/ρ afuera. V es constante dentro del conductor.','Zero inside; 1/ρ outside. V is constant inside the conductor.')};
+  }
+  if(id==='cavity_cylinder_ins'){
+    const rhoSI=q(p.rho), c=[p.d,0,0];
+    if(p.d+p.b >= p.a){ valid=false; msg=tr('Geometría inválida: se requiere d + b < a para que el hueco quede dentro del cilindro.','Invalid geometry: require d + b < a so the cavity remains inside the cylinder.'); }
+    else if(p.rg >= p.b){ valid=false; msg=tr('Superficie gaussiana inválida para el hueco: se requiere r_g < b.','Invalid Gaussian surface for the cavity: require r_g < b.'); }
+    else {
+      const inside=Math.hypot(P[0]-c[0],P[2]-c[2])<p.b;
+      qenc=0; flux=0;
+      if(inside){ E=Math.abs(rhoSI)*p.d/(2*EPS0); eVec=[Math.sign(rhoSI||1)*Math.sign(p.d||1)*E,0,0]; region=tr('Dentro del hueco cilíndrico','Inside cylindrical cavity'); }
+      else if(rho<p.a){ E=Math.abs(rhoSI)*rho/(2*EPS0); eVec=[P[0],0,P[2]].map(x=>x/(rho||1)*Math.sign(p.rho||1)*E); region=tr('Dentro del material aislante','Inside insulating material'); }
+      else { E=Math.abs(rhoSI)*p.a**2/(2*EPS0*rho); eVec=[P[0],0,P[2]].map(x=>x/(rho||1)*Math.sign(p.rho||1)*E); region=tr('Exterior del objeto','Outside object'); }
+      warning=tr('Para una superficie completamente dentro del hueco, Φ = 0 pero E puede ser uniforme y no nulo.','For a surface completely inside the cavity, Φ = 0 while E may be uniform and nonzero.');
+      formula=`Dentro del hueco: E = ρ d /(2 ε₀)  (uniforme)\nPara S ⊂ hueco: Qenc=0, Φ=0`;
+      derive=tr('Por superposición de un cilindro completo de densidad ρ y otro de densidad −ρ desplazado, el campo en el hueco es uniforme.','By superposing a full cylinder of density ρ with a displaced cylinder of density −ρ, the field inside the cavity is uniform.');
+    }
+  }
+  if(id==='conductor_cylinder_cavity'){
+    if(p.d+p.b >= p.a){ valid=false; msg=tr('Geometría inválida: se requiere d + b < a para que el hueco quede dentro del conductor.','Invalid geometry: require d + b < a so the cavity remains inside the conductor.'); }
+    else {
+      const c=[p.d,0,0], inCavity=Math.hypot(P[0]-c[0],P[2]-c[2])<p.b;
+      qenc = p.rg>p.a ? q(p.lambda)*p.L : 0; flux=qenc/EPS0;
+      if(rho>p.a){ E=Math.abs(q(p.lambda)/(2*Math.PI*EPS0*rho)); eVec=[P[0],0,P[2]].map(x=>x/rho*Math.sign(p.lambda||1)*E); region=tr('Exterior del conductor','Outside conductor'); }
+      else { E=0; eVec=[1,0,0]; region=inCavity?tr('Hueco vacío protegido','Shielded empty cavity'):tr('Interior del conductor','Inside conductor'); }
+      formula=`ρ > a: E(ρ)=|λ| /(2π ε₀ ρ)\nMetal y hueco vacío: E=0`;
+      derive=tr('Sin carga en el hueco ni excitación externa, la cavidad dentro del conductor queda apantallada.','With no charge inside the cavity and no external excitation, the cavity inside the conductor is shielded.');
+      graphInfo={kind:'condCylCavity', xLabel:'ρ (m)', max:Math.max(p.a*2.5,3), breaks:[p.a], f:x=> x<p.a ? 0 : Math.abs(q(p.lambda)/(2*Math.PI*EPS0*x)), note:tr('Gráfico radial respecto al eje del conductor.','Radial graph with respect to conductor axis.')};
+    }
+  }
+  if(id==='cube_center'){
+    qenc=q(p.Q); flux=qenc/EPS0; faceFlux=flux/6; region=tr('Carga en el centro: simetría cúbica','Charge at center: cubic symmetry');
+    const ef = radialSphereField(p.Q,[0,0,0],P); E=ef.E; eVec=ef.vec; formula=`Φtotal = Q/ε₀\nΦcara = Q/(6 ε₀)`; derive=tr('Las seis caras son equivalentes por simetría. El cubo completo encierra Q y el flujo total se reparte por igual.','The six faces are equivalent by symmetry. The full cube encloses Q and total flux is equally shared.');
+  }
+  if(id==='cube_vertex'){
+    const a=p.acube, src=[-a/2,-a/2,-a/2]; qenc=q(p.Q)/8; flux=qenc/EPS0; region=tr('Carga en un vértice del cubo','Charge at a cube vertex');
+    const sel=state.selectedFace; faceFlux = ['+x','+y','+z'].includes(sel) ? q(p.Q)/(24*EPS0) : 0;
+    const ef = radialSphereField(p.Q,src,P); E=ef.E; eVec=ef.vec;
+    warning=tr('El flujo total de ESTE cubo es Q/(8ε₀). Solo las tres caras opuestas al vértice comparten el flujo por igual: Q/(24ε₀) cada una. Las tres caras que contienen el vértice tienen flujo nulo.','The total flux through THIS cube is Q/(8ε₀). Only the three faces opposite the vertex share the flux equally: Q/(24ε₀) each. The three faces that contain the vertex have zero flux.');
+    formula=`Φcubo = Q/(8 ε₀)\nCara opuesta seleccionada: Φcara = Q/(24 ε₀)\nCaras que contienen el vértice: Φcara = 0`;
+    derive=tr('Ocho cubos idénticos pueden rodear el vértice para formar un cubo grande con la carga en su centro. El flujo grande es Q/ε₀, así que cada cubo recibe Q/(8ε₀). Luego, por simetría entre las tres caras opuestas, cada una lleva Q/(24ε₀).','Eight identical cubes can surround the vertex to form a larger cube with the charge at its center. The large-cube flux is Q/ε₀, so each small cube gets Q/(8ε₀). Then symmetry among the three opposite faces gives Q/(24ε₀) each.');
+  }
+
+  return {valid,msg,qenc,flux,E,D,faceFlux,region,warning,formula,derive,eVec,pPoint:P,graphInfo};
+}
+
+function clampPoint(){
+  const id=state.scenario, p=state.params[id], P=state.P;
+  if(id.includes('wire')||id.includes('cylinder')){
+    P[1]=0;
+    P[0]=clamp(P[0], -3.2, 3.2); P[2]=clamp(P[2], -3.2, 3.2);
+    if(Math.hypot(P[0],P[2])<0.16){ P[0]=0.16; P[2]=0; }
+    if(id==='cavity_cylinder_ins' || id==='conductor_cylinder_cavity'){
+      const c=[p.d,0]; const dx=P[0]-c[0], dz=P[2]-c[1], rr=Math.hypot(dx,dz);
+      if(rr>p.b*0.85 && state.show.moveP){ const s=(p.b*0.85)/(rr||1); P[0]=c[0]+dx*s; P[2]=dz*s; }
+    }
+  } else if(id==='cube_center'){
+    const lim=p.acube/2*0.9; P[0]=clamp(P[0],-lim,lim); P[1]=clamp(P[1],-lim,lim); P[2]=clamp(P[2],-lim,lim);
+  } else if(id==='cube_vertex'){
+    const lim=p.acube/2*0.9; P[0]=clamp(P[0],-lim,lim); P[1]=clamp(P[1],-lim,lim); P[2]=clamp(P[2],-lim,lim);
+  } else {
+    P[2]=0; P[0]=clamp(P[0], -3.2, 3.2); P[1]=clamp(P[1], -3.2, 3.2);
+    if(norm(P)<0.15) { P[0]=0.15; P[1]=0; }
+    if(id==='cavity_sphere_ins' || id==='conductor_sphere_cavity'){
+      const c=[p.d,0,0], rr=norm(vsub(P,c));
+      if(state.show.moveP && rr>p.b*0.85){ const dir=unit(vsub(P,c)); state.P=vadd(c,vmul(dir,p.b*0.85)); }
+    }
+  }
+}
+
+function detailedDerivation(c){
+  const id=state.scenario, p=state.params[id];
+  const R=p.rg, a=p.a, b=p.b, d=p.d, L=p.L, ac=p.acube;
+  const rhoSI=p.rho!==undefined ? q(p.rho) : null;
+  const lamSI=p.lambda!==undefined ? q(p.lambda) : null;
+  const qSI=p.Q!==undefined ? q(p.Q) : null;
+  const block=(title,body)=>`<div class="deriveBlock"><h3>${title}</h3><div class="math">${body}</div></div>`;
+  const fin=body=>`<div class="deriveBlock"><h3>${tr('Expresión final','Final expression')}</h3><div class="finalExpr">${body}</div></div>`;
+  const warn=body=>`<div class="warningTutor">${body}</div>`;
+  let h='';
+  h += block(tr('1. Ley fundamental y unidades','1. Fundamental law and units'),`∮_S E⃗ · dA⃗ = q_enc / ε₀\nε₀ = 8.854 187 8188 × 10⁻¹² F/m\n[Φ_E] = N·m²/C        [E] = N/C`);
+  if(id==='point_center'){
+    h += block(tr('2. Superficie y carga encerrada','2. Surface and enclosed charge'),`S: esfera de radio R = ${fmt(R)} m, centrada en Q\nq_enc = Q = ${fmt(qSI)} C`);
+    h += block(tr('3. Integral del flujo','3. Flux integral'),`dA = R² sinθ dθ dφ\nΦ_E = ∫₀²π ∫₀π E(R) R² sinθ dθ dφ\n    = E(R)R² [∫₀²π dφ][∫₀π sinθ dθ]\n    = E(R)R² (2π)(2) = 4πR²E(R)`);
+    h += block(tr('4. Sustitución en Gauss','4. Substitution in Gauss'),`4πR² E(R) = Q/ε₀\nE(R) = Q /(4π ε₀ R²) = kQ/R²`);
+    h += fin(`E(r) = kQ/r²  r̂     (r > 0)\nΦ_E(R) = Q/ε₀ = ${fmt(c.flux)} N·m²/C\nE(P) = ${fmt(c.E)} N/C`);
+  }
+  if(id==='point_offset'){
+    h += block(tr('2. Carga encerrada','2. Enclosed charge'),`Centro de S: O; posición de Q: d = ${fmt(d)} m\nSi d < R, q_enc = Q = ${fmt(qSI)} C\nΦ_E = Q/ε₀ = ${fmt(c.flux)} N·m²/C`);
+    h += block(tr('3. Integral correcta','3. Correct integral'),`Φ_E = ∫₀²π ∫₀π [E⃗(R,θ,φ) · r̂] R² sinθ dθ dφ\n\nNo se puede sacar E fuera de la integral porque\n|E⃗(R,θ,φ)| = k|Q| / |R r̂ − d x̂|²\ndepende de θ y φ.`);
+    h += fin(`Φ_E = Q/ε₀\nE⃗(P) = kQ (r⃗_P − d x̂) / |r⃗_P − d x̂|³\nNO válido: E·4πR² = Q/ε₀ para S descentrada`);
+    h += warn(tr('Resultado didáctico: Gauss determina el flujo total, pero no permite hallar un E constante sobre esta esfera.','Teaching result: Gauss determines total flux but does not give a constant E over this sphere.'));
+  }
+  if(id==='ins_sphere'){
+    h += block(tr('2. Carga encerrada para r < a','2. Enclosed charge for r < a'),`q_enc(r) = ∫_V ρ dV = ∫₀ʳ ρ (4πr′² dr′)\n         = 4πρ [r′³/3]₀ʳ = (4πρ r³)/3`);
+    h += block(tr('3. Aplicación de Gauss dentro','3. Gauss law inside'),`∫₀²π∫₀π E(r) r² sinθ dθ dφ = q_enc(r)/ε₀\n4πr² E(r) = (4πρr³)/(3ε₀)\nE(r) = ρr /(3ε₀),      0 ≤ r < a`);
+    h += block(tr('4. Región exterior r ≥ a','4. Exterior region r ≥ a'),`q_enc = ∫₀ᵃ ρ(4πr′² dr′) = (4πρa³)/3\n4πr²E(r) = (4πρa³)/(3ε₀)\nE(r) = ρa³ /(3ε₀r²),  r ≥ a`);
+    h += fin(`E(r) = { ρr/(3ε₀),            0 ≤ r < a\n       { ρa³/(3ε₀r²),       r ≥ a\n\nE(P) = ${fmt(c.E)} N/C`);
+  }
+  if(id==='dielectric_sphere'){
+    h += block(tr('2. Ley para carga libre','2. Law for free charge'),`∮_S D⃗ · dA⃗ = q_libre,enc\nDentro (r<a): q_libre,enc = ∫₀ʳ ρ_libre 4πr′²dr′ = 4πρ_libre r³/3`);
+    h += block(tr('3. Campo de desplazamiento D','3. Displacement field D'),`4πr² D(r) = 4πρ_libre r³/3\nD(r) = ρ_libre r /3,               r<a\nD(r) = ρ_libre a³ /(3r²),          r≥a`);
+    h += block(tr('4. Conversión a E','4. Conversion to E'),`Dentro:  E = D/(ε₀ε_r)\nFuera (vacío): E = D/ε₀`);
+    h += fin(`E(r) = { ρ_libre r/(3ε₀ε_r),        0 ≤ r < a\n       { ρ_libre a³/(3ε₀r²),        r ≥ a\n\nD(P) = ${fmt(c.D)} C/m²     E(P) = ${fmt(c.E)} N/C`);
+  }
+  if(id==='shell_sphere' || id==='conductor_sphere'){
+    h += block(tr('2. Superficies gaussianas','2. Gaussian surfaces'),`Para r<a: q_enc = 0\n∮ E⃗·dA⃗ = 4πr²E(r) = 0  ⇒  E(r)=0\n\nPara r>a: q_enc = Q\n4πr²E(r) = Q/ε₀`);
+    if(id==='conductor_sphere') h += block(tr('3. Propiedad del conductor','3. Conductor property'),`En equilibrio electrostático: E⃗ = 0 dentro del material conductor\ny la carga libre reside sobre la superficie r=a.`);
+    h += fin(`E(r) = { 0,                         0 ≤ r < a\n       { kQ/r² r̂,                 r > a\n\nE(P) = ${fmt(c.E)} N/C`);
+  }
+  if(id==='conductor_sphere_cavity'){
+    h += block(tr('2. Conductor y cavidad vacía','2. Conductor and empty cavity'),`En el metal: E⃗=0 en equilibrio electrostático.\nUna cavidad cerrada sin carga interna y sin campo impuesto queda apantallada:\nE⃗_cavidad = 0.`);
+    h += block(tr('3. Exterior','3. Exterior'),`Para una S esférica con r>a:\nq_enc = Q\n∫₀²π∫₀π E(r)r²sinθ dθdφ = Q/ε₀\n4πr²E(r)=Q/ε₀`);
+    h += fin(`E(r) = 0 en metal y cavidad vacía\nE(r) = kQ/r² r̂ para r>a\n\nE(P) = ${fmt(c.E)} N/C`);
+  }
+  if(id==='cavity_sphere_ins'){
+    h += block(tr('2. Superposición','2. Superposition'),`Esfera real con hueco = esfera completa (+ρ, centro O)\n                         + esfera retirada (−ρ, centro O′)\nVector desplazamiento: d⃗ = O→O′ = d x̂`);
+    h += block(tr('3. Campos dentro de cada esfera','3. Fields inside each sphere'),`Para un punto P dentro del hueco:\nE⃗₊(P) = ρ r⃗ /(3ε₀)\nE⃗₋(P) = −ρ (r⃗ − d⃗)/(3ε₀)\n\nE⃗ = E⃗₊ + E⃗₋\n   = [ρr⃗ − ρ(r⃗−d⃗)]/(3ε₀)\n   = ρd⃗ /(3ε₀)`);
+    h += block(tr('4. Flujo por una superficie dentro del hueco','4. Flux through a surface inside the cavity'),`q_enc = ∫_V 0·dV = 0\nΦ_E = ∮_S E⃗_constante · dA⃗\n    = E⃗_constante · ∮_S dA⃗ = 0`);
+    h += fin(`E⃗_hueco = (ρ d)/(3ε₀) x̂   (uniforme)\nΦ_E(S dentro del hueco) = 0\nE(P) = ${fmt(c.E)} N/C`);
+  }
+  if(id==='infinite_wire'){
+    h += block(tr('2. Carga encerrada','2. Enclosed charge'),`Superficie: cilindro coaxial de radio ρ_g = ${fmt(R)} m y longitud L = ${fmt(L)} m\nq_enc = ∫₀ᴸ λ dz = λL = ${fmt(c.qenc)} C`);
+    h += block(tr('3. Integral por superficies','3. Integral over surfaces'),`Φ_E = ∬_lateral E⃗·dA⃗ + ∬_tapa 1 E⃗·dA⃗ + ∬_tapa 2 E⃗·dA⃗\n\nLateral: dA = ρ dφ dz, E⃗ ∥ dA⃗\n∬_lateral = ∫₀ᴸ∫₀²π E(ρ) ρ dφ dz = E(ρ)(2πρL)\n\nTapas: E⃗ ⟂ dA⃗  ⇒  ∬_tapas = 0`);
+    h += block(tr('4. Despeje','4. Solve'),`E(ρ)(2πρL) = λL/ε₀\nE(ρ) = λ /(2π ε₀ ρ)`);
+    h += fin(`E⃗(ρ) = [λ/(2π ε₀ ρ)] ρ̂\nΦ_E = λL/ε₀ = ${fmt(c.flux)} N·m²/C\nE(P) = ${fmt(c.E)} N/C`);
+  }
+  if(id==='finite_wire'){
+    h += block(tr('2. Integral directa del campo en el plano medio','2. Direct field integral at the midplane'),`dq = λ dz′,     z′ ∈ [−ℓ/2, +ℓ/2]\ndE_ρ = k dq · ρ /(ρ²+z′²)^(3/2)\n\nE_ρ = ∫₋ℓ⁄₂⁺ℓ⁄₂ kλρ dz′ /(ρ²+z′²)^(3/2)\n    = kλℓ / [ρ √(ρ²+(ℓ/2)²)]`);
+    h += block(tr('3. Por qué no se despeja con Gauss','3. Why Gauss cannot solve E'),`Aunque Φ_E = q_enc/ε₀ sigue siendo cierta,\nE no tiene el mismo módulo sobre toda la pared cilíndrica\ny existe componente de flujo sobre las tapas.`);
+    h += fin(`E_ρ(P, plano medio) = kλℓ / [ρ √(ρ²+(ℓ/2)²)]\nNO válido: E(2πρL)=q_enc/ε₀ para alambre finito`);
+  }
+  if(id==='ins_cylinder'){
+    h += block(tr('2. Carga encerrada para ρ<a','2. Enclosed charge for ρ<a'),`q_enc(ρ) = ∫₀ᴸ∫₀²π∫₀^ρ ρ_vol ρ′ dρ′ dφ dz\n         = ρ_vol L(2π)(ρ²/2) = ρ_vol πρ²L`);
+    h += block(tr('3. Flujo lateral','3. Lateral flux'),`Φ_E = ∫₀ᴸ∫₀²π E(ρ) ρ dφ dz\n    = E(ρ)2πρL\nLas tapas aportan cero porque E⃗ es radial.`);
+    h += block(tr('4. Dentro y fuera','4. Inside and outside'),`Dentro: E(ρ)2πρL = ρ_vol πρ²L/ε₀\n        E(ρ)=ρ_vol ρ/(2ε₀)\n\nFuera: q_enc=ρ_vol πa²L\n       E(ρ)=ρ_vol a²/(2ε₀ρ)`);
+    h += fin(`E(ρ) = { ρ_vol ρ/(2ε₀),             0 ≤ ρ < a\n       { ρ_vol a²/(2ε₀ρ),          ρ ≥ a\n\nE(P) = ${fmt(c.E)} N/C`);
+  }
+  if(id==='dielectric_cylinder'){
+    h += block(tr('2. Carga libre encerrada','2. Enclosed free charge'),`q_libre,enc(ρ<a) = ∫₀ᴸ∫₀²π∫₀^ρ ρ_libre ρ′ dρ′ dφ dz\n                   = ρ_libre πρ²L`);
+    h += block(tr('3. Integral de D','3. Integral of D'),`∮ D⃗·dA⃗ = q_libre,enc\nD(ρ)2πρL = ρ_libre πρ²L\nD(ρ) = ρ_libre ρ/2,             ρ<a\nD(ρ) = ρ_libre a²/(2ρ),         ρ≥a`);
+    h += block(tr('4. Relación constitutiva','4. Constitutive relation'),`Dentro del dieléctrico: E = D/(ε₀ε_r)\nFuera en vacío:          E = D/ε₀`);
+    h += fin(`E(ρ) = { ρ_libre ρ/(2ε₀ε_r),       0 ≤ ρ < a\n       { ρ_libre a²/(2ε₀ρ),       ρ ≥ a\n\nD(P) = ${fmt(c.D)} C/m²    E(P) = ${fmt(c.E)} N/C`);
+  }
+  if(id==='conductor_cylinder'){
+    h += block(tr('2. Región interior y exterior','2. Inner and outer regions'),`Para ρ<a: q_enc=0 y el conductor en equilibrio cumple E=0.\n\nPara ρ>a:\nq_enc = ∫₀ᴸ λ dz = λL\n∫₀ᴸ∫₀²π E(ρ)ρ dφ dz = E(ρ)2πρL = λL/ε₀`);
+    h += fin(`E(ρ) = { 0,                          0 ≤ ρ < a\n       { λ/(2π ε₀ ρ) ρ̂,          ρ > a\n\nE(P) = ${fmt(c.E)} N/C`);
+  }
+  if(id==='cavity_cylinder_ins'){
+    h += block(tr('2. Superposición de cilindros','2. Cylinder superposition'),`Cilindro con hueco = cilindro completo (+ρ, eje O)\n                      + cilindro retirado (−ρ, eje O′)\nd⃗ = O→O′ = d x̂`);
+    h += block(tr('3. Campo en el hueco','3. Field inside the cavity'),`Dentro de un cilindro uniforme: E⃗ = ρ r⃗ /(2ε₀)\n\nE⃗_total = ρ r⃗ /(2ε₀) − ρ(r⃗−d⃗)/(2ε₀)\n         = ρ d⃗ /(2ε₀)`);
+    h += block(tr('4. Flujo en una superficie dentro del hueco','4. Flux through a surface inside cavity'),`q_enc = 0\nΦ_E = ∮_S E⃗_constante·dA⃗ = E⃗_constante·∮_S dA⃗ = 0`);
+    h += fin(`E⃗_hueco = (ρd)/(2ε₀) x̂   (uniforme)\nΦ_E(S dentro del hueco)=0\nE(P) = ${fmt(c.E)} N/C`);
+  }
+  if(id==='conductor_cylinder_cavity'){
+    h += block(tr('2. Apantallamiento conductor','2. Conducting shielding'),`En equilibrio electrostático, E⃗=0 en el metal.\nPara un hueco vacío cerrado, sin carga interna:\nE⃗_hueco=0.`);
+    h += block(tr('3. Campo exterior','3. Exterior field'),`Para ρ>a:\nq_enc=∫₀ᴸ λ dz=λL\nE(ρ)2πρL = λL/ε₀\nE(ρ)=λ/(2πε₀ρ)`);
+    h += fin(`E(ρ)=0 en el conductor y el hueco vacío\nE⃗(ρ)=[λ/(2πε₀ρ)]ρ̂ para ρ>a\nE(P)=${fmt(c.E)} N/C`);
+  }
+  if(id==='cube_center'){
+    h += block(tr('2. Ley de Gauss sobre el cubo','2. Gauss law over cube'),`q_enc = Q = ${fmt(qSI)} C\nΦ_total = ∯_cubo E⃗·dA⃗\n        = Σ(i=1 a 6) ∬_(cara i) E⃗·n̂_i dA\n        = Q/ε₀`);
+    h += block(tr('3. Simetría entre seis caras','3. Symmetry among six faces'),`La carga está exactamente en el centro. Las seis caras son equivalentes:\nΦ_1 = Φ_2 = ... = Φ_6 = Φ_total/6\nΦ_cara = Q/(6ε₀)`);
+    h += fin(`Φ_total = Q/ε₀ = ${fmt(c.flux)} N·m²/C\nΦ_cara = Q/(6ε₀) = ${fmt(c.faceFlux)} N·m²/C\n\nAtención: E no es constante punto a punto sobre una cara cuadrada.`);
+  }
+  if(id==='cube_vertex'){
+    h += block(tr('2. Construcción con ocho cubos','2. Construction with eight cubes'),`Se unen 8 cubos idénticos alrededor del vértice cargado.\nEl cubo grande resultante encierra Q en su centro:\nΦ_grande = Q/ε₀\n\nPor simetría entre los 8 cubos:\nΦ_cubo = (1/8)Φ_grande = Q/(8ε₀)`);
+    h += block(tr('3. Flujo por las caras','3. Flux through faces'),`En el cubo pequeño, las 3 caras que contienen el vértice\ntienen E⃗ tangente a ellas ⇒ E⃗·n̂ = 0 ⇒ Φ = 0.\n\nEl flujo Q/(8ε₀) sale solo por las 3 caras opuestas, equivalentes:\n3 Φ_opuesta = Q/(8ε₀)\nΦ_opuesta = Q/(24ε₀)`);
+    h += fin(`Φ_cubo = Q/(8ε₀) = ${fmt(c.flux)} N·m²/C\nΦ_cara opuesta = Q/(24ε₀)\nΦ_cara que contiene el vértice = 0\n\nCara seleccionada: Φ = ${fmt(c.faceFlux)} N·m²/C`);
+  }
+  return h;
+}
+
+function updatePanels(c){
+  $('hudTitle').textContent = defs[state.scenario][state.lang];
+  const status=$('validity');
+  if(!c.valid){
+    status.className='status bad'; status.textContent=c.msg; $('hQ').textContent=$('hFlux').textContent=$('hE').textContent=$('hFace').textContent='—';
+    $('result').innerHTML=`<div class="panelTab">${c.msg}</div>`; $('derive').innerHTML=''; return;
+  }
+  status.className='status'+(c.warning?' warn':'');
+  status.textContent = c.warning || tr('Configuración válida.','Valid configuration.');
+  $('hQ').textContent=sci(c.qenc,'C'); $('hFlux').textContent=sci(c.flux,'N·m²/C'); $('hE').textContent=sci(c.E,'N/C'); $('hFace').textContent=(c.faceFlux===null? '—' : sci(c.faceFlux,'N·m²/C'));
+
+  const drow = c.D!==null ? `<tr><td>D(P)</td><td>${sci(c.D,'C/m²')}</td></tr>` : '';
+  let faceBlock = '';
+  if(c.faceFlux!==null){
+    const faceLabel = faceOptions.find(f=>f.id===state.selectedFace);
+    faceBlock = `<div class="faceNote"><b>${tr('Cara seleccionada','Selected face')}:</b> ${faceLabel ? (state.lang==='es'?faceLabel.es:faceLabel.en) : state.selectedFace}<br><b>${tr('Flujo por esa cara','Flux through that face')}:</b> ${sci(c.faceFlux,'N·m²/C')}</div>`;
+  }
+  $('result').innerHTML = `
+    <table class="table">
+      <tr><td>${tr('Región / interpretación','Region / interpretation')}</td><td>${c.region}</td></tr>
+      <tr><td>q<sub>enc</sub></td><td>${sci(c.qenc,'C')}</td></tr>
+      <tr><td>Φ<sub>E</sub></td><td>${sci(c.flux,'N·m²/C')}</td></tr>
+      <tr><td>E(P)</td><td>${sci(c.E,'N/C')}</td></tr>
+      ${drow}
+    </table>
+    ${state.show.expressions ? `<div class="formula">${c.formula}</div>`:''}
+    ${faceBlock}
+  `;
+  $('derive').innerHTML = state.show.expressions ? detailedDerivation(c) : `<div class="fine">${tr('Active el botón Expresiones para mostrar el desarrollo integral completo.','Enable the Expressions button to display the complete integral development.')}</div>`;
+}
+
+function resize(){ const rect=CV.getBoundingClientRect(); DPR=Math.min(2, window.devicePixelRatio||1); W=rect.width; H=rect.height; CV.width=Math.floor(W*DPR); CV.height=Math.floor(H*DPR); CTX.setTransform(DPR,0,0,DPR,0,0); draw(); }
+function rot(pt){
+  let [x,y,z]=pt; const cy=Math.cos(state.yaw), sy=Math.sin(state.yaw), cp=Math.cos(state.pitch), sp=Math.sin(state.pitch);
+  const x1=x*cy+z*sy, z1=-x*sy+z*cy; const y2=y*cp-z1*sp, z2=y*sp+z1*cp; return [x1,y2,z2];
+}
+function proj(pt){ const [x,y,z]=rot(pt); const s=Math.min(W,H)*0.16*state.zoom; return {x:W/2+x*s,y:H/2-y*s,z}; }
+function line3(a,b,color,width=1.5,alpha=1,dash=[]){ const pa=proj(a), pb=proj(b); primitives.push({z:(pa.z+pb.z)/2, fn:()=>{CTX.save(); CTX.globalAlpha=alpha; CTX.strokeStyle=color; CTX.lineWidth=width; CTX.setLineDash(dash); CTX.beginPath(); CTX.moveTo(pa.x,pa.y); CTX.lineTo(pb.x,pb.y); CTX.stroke(); CTX.restore();}}); }
+function poly3(points,color,width=1.3,alpha=.8,dash=[], fill=null){ const ps=points.map(proj), z=ps.reduce((s,p)=>s+p.z,0)/ps.length; primitives.push({z, fn:()=>{CTX.save(); CTX.globalAlpha=alpha; CTX.strokeStyle=color; CTX.lineWidth=width; CTX.setLineDash(dash); CTX.beginPath(); ps.forEach((p,i)=> i?CTX.lineTo(p.x,p.y):CTX.moveTo(p.x,p.y)); CTX.closePath(); if(fill){CTX.fillStyle=fill; CTX.fill();} CTX.stroke(); CTX.restore();}}); }
+function dot3(p,color,r=4,label=''){ const pp=proj(p); primitives.push({z:pp.z-0.01, fn:()=>{CTX.save(); CTX.fillStyle=color; CTX.beginPath(); CTX.arc(pp.x,pp.y,r,0,Math.PI*2); CTX.fill(); if(label && state.show.labels){CTX.fillStyle=palette.text; CTX.font='700 12px Inter,Arial'; CTX.fillText(label, pp.x+7, pp.y-7);} CTX.restore();}}); }
+function text3(p,text,color=palette.text){ if(!state.show.labels) return; const pp=proj(p); primitives.push({z:pp.z-0.1, fn:()=>{CTX.save(); CTX.fillStyle=color; CTX.font='700 12px Inter,Arial'; CTX.fillText(text, pp.x+4, pp.y-5); CTX.restore();}}); }
+function arrow3(a,b,color,label=''){ line3(a,b,color,2.1,1); const u=unit(vsub(b,a)); let ref=Math.abs(u[0])<0.8 ? [1,0,0] : [0,1,0]; let side=unit(cross(u,ref)); if(norm(side)<1e-6) side=[0,0,1]; const h=.11; line3(b, vadd(vadd(b,vmul(u,-h)),vmul(side,h*.46)), color,2,1); line3(b, vadd(vadd(b,vmul(u,-h)),vmul(side,-h*.46)), color,2,1); if(label) text3(b,label,color); }
+function sphereMesh(c,r,color,width=1.2,alpha=.55,dash=[]){ for(let phi=-Math.PI/3; phi<=Math.PI/3+.01; phi+=Math.PI/6){ let rr=r*Math.cos(phi), yy=r*Math.sin(phi), pts=[]; for(let t=0;t<=Math.PI*2+.02;t+=Math.PI/24) pts.push(vadd(c,[rr*Math.cos(t),yy,rr*Math.sin(t)])); poly3(pts,color,width,alpha,dash);} for(let t=0;t<Math.PI;t+=Math.PI/6){ let pts=[]; for(let p=-Math.PI/2;p<=Math.PI/2+.02;p+=Math.PI/32) pts.push(vadd(c,[r*Math.cos(p)*Math.cos(t),r*Math.sin(p),r*Math.cos(p)*Math.sin(t)])); poly3(pts,color,width,alpha,dash);} }
+function cylinderMesh(c,r,h,color,width=1.2,alpha=.6,dash=[]){ for(const y of [-h/2,h/2]){ let pts=[]; for(let t=0;t<=Math.PI*2+.02;t+=Math.PI/26) pts.push(vadd(c,[r*Math.cos(t),y,r*Math.sin(t)])); poly3(pts,color,width,alpha,dash);} for(let t=0;t<Math.PI*2;t+=Math.PI/8){ line3(vadd(c,[r*Math.cos(t),-h/2,r*Math.sin(t)]), vadd(c,[r*Math.cos(t),h/2,r*Math.sin(t)]), color,width,alpha,dash);} }
+function cubeMesh(center,a,color,width=1.6,alpha=.75,dash=[]){ const h=a/2; const pts={
+  a:vadd(center,[-h,-h,-h]), b:vadd(center,[h,-h,-h]), c:vadd(center,[h,h,-h]), d:vadd(center,[-h,h,-h]),
+  e:vadd(center,[-h,-h,h]), f:vadd(center,[h,-h,h]), g:vadd(center,[h,h,h]), h:vadd(center,[-h,h,h])
+ }; const E=[['a','b'],['b','c'],['c','d'],['d','a'],['e','f'],['f','g'],['g','h'],['h','e'],['a','e'],['b','f'],['c','g'],['d','h']]; E.forEach(([u,v])=>line3(pts[u],pts[v],color,width,alpha,dash)); return pts; }
+function highlightFace(pts,face){ const map={'+x':['b','c','g','f'],'-x':['a','d','h','e'],'+y':['d','c','g','h'],'-y':['a','b','f','e'],'+z':['e','f','g','h'],'-z':['a','b','c','d']}; poly3(map[face].map(k=>pts[k]), palette.face, 2.4, .95, [], 'rgba(255,159,28,0.12)'); }
+function axes(){ if(!state.show.axes) return; arrow3([-2.5,0,0],[2.6,0,0],'#e45767','x'); arrow3([0,-2.3,0],[0,2.4,0],'#49b16c','y'); arrow3([0,0,-2.4],[0,0,2.5],'#4d8ff1','z'); }
+function normalsAndFieldOnSphere(rg){ const ang=state.theta*Math.PI/180, ang2=0.35*Math.sin(ang*0.6), p=[rg*Math.cos(ang)*Math.cos(ang2), rg*Math.sin(ang2), rg*Math.sin(ang)*Math.cos(ang2)]; const n=unit(p); if(state.show.normals) arrow3(p, vadd(p,vmul(n,.34)), palette.normal, 'dA'); if(state.show.field) arrow3(vadd(p,vmul(n,-.16)), vadd(p,vmul(n,.48)), palette.field, 'E'); }
+function normalsAndFieldOnCylinder(rg,h){ const ang=state.theta*Math.PI/180, p=[rg*Math.cos(ang),0,rg*Math.sin(ang)], n=unit([p[0],0,p[2]]); if(state.show.normals) arrow3(p,vadd(p,vmul(n,.34)),palette.normal,'dA'); if(state.show.field) arrow3(vadd(p,vmul(n,-.16)),vadd(p,vmul(n,.48)),palette.field,'E'); }
+function normalsAndFieldOnCube(a){ const h=a/2, face=state.selectedFace; let center=[0,0,0], n=[0,0,0]; if(face=='+x'){center=[h,0,0];n=[1,0,0];} if(face=='-x'){center=[-h,0,0];n=[-1,0,0];} if(face=='+y'){center=[0,h,0];n=[0,1,0];} if(face=='-y'){center=[0,-h,0];n=[0,-1,0];} if(face=='+z'){center=[0,0,h];n=[0,0,1];} if(face=='-z'){center=[0,0,-h];n=[0,0,-1];} if(state.show.normals) arrow3(center,vadd(center,vmul(n,.34)),palette.normal,'dA'); if(state.show.field) arrow3(vadd(center,vmul(n,-.14)),vadd(center,vmul(n,.45)),palette.field,'E⊥'); }
+function chargeSphereDots(a,sign,cavity=null){ if(!state.show.charges) return; for(let i=0;i<42;i++){ const t=i*2.399, rad=a*Math.cbrt((i+.5)/42)*.84, y=rad*Math.cos(t*.77), rr=Math.sqrt(Math.max(0,rad*rad-y*y)), p=[rr*Math.cos(t),y,rr*Math.sin(t)]; if(cavity && norm(vsub(p,cavity.c))<cavity.b) continue; dot3(p,sign>=0?palette.pos:palette.neg,2.1);} }
+function chargeCylinderDots(a,h,sign,cavity=null){ if(!state.show.charges) return; for(let j=-2;j<=2;j++) for(let i=0;i<12;i++){ let rad=a*.73*Math.sqrt((i+1)/12), t=i*2.31+j*.43, p=[rad*Math.cos(t), j*h/5, rad*Math.sin(t)]; if(cavity && Math.hypot(p[0]-cavity.c[0],p[2]-cavity.c[2])<cavity.b) continue; dot3(p,sign>=0?palette.pos:palette.neg,2.0);} }
+function radialArrowsFromCharge(src,sign,count=12,span=1.8){ if(!state.show.field) return; for(let i=0;i<count;i++){ const ang=2*Math.PI*i/count; const u=unit([Math.cos(ang), Math.sin(ang)*0.55, Math.sin(ang)]); const a=vadd(src,vmul(u,.15)), b=vadd(src,vmul(u,span)); if(sign>=0) arrow3(a,b,palette.field,i===0?'E':''); else arrow3(b,a,palette.field,i===0?'E':''); } }
+function pointMarker(c){ if(!state.show.point || !c.valid) return; state.projectedP = proj(c.pPoint); dot3(c.pPoint,'#ffffff',4.8,'P'); if(c.E!==0 && Number.isFinite(c.E)){ const dir=norm(c.eVec)<1e-10 ? [1,0,0] : unit(c.eVec); const len=.16 + state.vectorScale/240; arrow3(c.pPoint, vadd(c.pPoint, vmul(dir,len)), palette.field, 'E(P)'); } }
+function sceneBackdrop(){
+  CTX.fillStyle=palette.bg;
+  CTX.fillRect(0,0,W,H);
+  const theme=state.theme;
+  if(!['board','darkgrid','lightgrid'].includes(theme)) return;
+  const isBoard=theme==='board', isLight=theme==='lightgrid';
+  const minor=isBoard?'rgba(239,232,190,0.11)':isLight?'rgba(43,117,184,0.15)':'rgba(120,196,255,0.13)';
+  const major=isBoard?'rgba(255,247,202,0.20)':isLight?'rgba(25,95,168,0.24)':'rgba(139,210,255,0.22)';
+  const step=isBoard?30:28;
+  CTX.save();
+  CTX.lineWidth=1;
+  for(let x=(W%step);x<W;x+=step){CTX.strokeStyle=minor;CTX.beginPath();CTX.moveTo(x,0);CTX.lineTo(x,H);CTX.stroke();}
+  for(let y=(H%step);y<H;y+=step){CTX.strokeStyle=minor;CTX.beginPath();CTX.moveTo(0,y);CTX.lineTo(W,y);CTX.stroke();}
+  for(let x=(W%(step*5));x<W;x+=step*5){CTX.strokeStyle=major;CTX.beginPath();CTX.moveTo(x,0);CTX.lineTo(x,H);CTX.stroke();}
+  for(let y=(H%(step*5));y<H;y+=step*5){CTX.strokeStyle=major;CTX.beginPath();CTX.moveTo(0,y);CTX.lineTo(W,y);CTX.stroke();}
+  if(isBoard){
+    CTX.globalAlpha=.12;
+    for(let i=0;i<34;i++){
+      const y=(i*73)%Math.max(H,1), x=(i*151)%Math.max(W,1);
+      CTX.strokeStyle=i%3===0?'#fff8d6':i%3===1?'#ffd166':'#ff7b6e';
+      CTX.beginPath(); CTX.moveTo(x,y); CTX.lineTo(Math.min(W,x+80),Math.max(0,y-10)); CTX.stroke();
+    }
+  }
+  CTX.restore();
+}
+function draw(){ sceneBackdrop(); primitives=[]; axes(); const c=calc(); updatePanels(c); if(!c.valid){ renderPrims(); drawGraph(); return; }
+  const id=state.scenario, p=state.params[id], chargeSign = id.includes('lambda') ? Math.sign(p.lambda||1) : Math.sign((p.Q!==undefined?p.Q:p.rho)||1);
+
+  if(id==='point_center' || id==='point_offset'){ const src=id==='point_offset'?[p.d,0,0]:[0,0,0]; drawEquipotentialSphere(src,Math.max(0.28,p.rg*0.45)); if(state.show.gaussian) sphereMesh([0,0,0],p.rg,palette.gold,1.8,.76,[6,4]); radialArrowsFromCharge(src, Math.sign(p.Q||1), 14, Math.max(p.rg,1.8)); if(state.show.charges) dot3(src, p.Q>=0?palette.pos:palette.neg, 6.6, p.Q>=0?'+Q':'−Q'); normalsAndFieldOnSphere(p.rg); text3([0,p.rg+.12,0],'Sg',palette.gold); }
+
+  if(id==='ins_sphere' || id==='dielectric_sphere'){ drawEquipotentialSphere([0,0,0],Math.max(.25,p.a*0.42)); sphereMesh([0,0,0],p.a,id==='dielectric_sphere'?palette.matter:palette.pos,1.7,.62); chargeSphereDots(p.a,Math.sign(p.rho||1)); if(state.show.gaussian) sphereMesh([0,0,0],p.rg,palette.gold,1.8,.76,[6,4]); if(state.show.field) radialArrowsFromCharge([0,0,0],Math.sign(p.rho||1),12,Math.max(p.a,p.rg,1.6)); normalsAndFieldOnSphere(p.rg); text3([0,p.a+.15,0],id==='dielectric_sphere'?'εr, ρlibre':'ρ'); }
+
+  if(id==='shell_sphere' || id==='conductor_sphere'){ drawEquipotentialSphere([0,0,0],Math.max(.25,p.a*0.42)); sphereMesh([0,0,0],p.a,id==='conductor_sphere'?palette.conductor:palette.pos,2.0,.74); if(state.show.charges){ for(let t=0;t<Math.PI*2;t+=Math.PI/6) dot3([p.a*Math.cos(t),0,p.a*Math.sin(t)], p.Q>=0?palette.pos:palette.neg, 3.0); } if(state.show.gaussian) sphereMesh([0,0,0],p.rg,palette.gold,1.8,.76,[6,4]); if(state.show.field && p.rg>p.a) radialArrowsFromCharge([0,0,0],Math.sign(p.Q||1),12,Math.max(p.rg,1.8)); normalsAndFieldOnSphere(p.rg); text3([0,p.a+.15,0],id==='conductor_sphere'?'conductor':'shell'); }
+
+  if(id==='conductor_sphere_cavity'){ drawEquipotentialSphere([0,0,0],Math.max(.25,p.a*0.42)); sphereMesh([0,0,0],p.a,palette.conductor,2.0,.72); sphereMesh([p.d,0,0],p.b,palette.matter,2.0,.95,[4,3]); if(state.show.gaussian) sphereMesh([0,0,0],p.rg,palette.gold,1.8,.76,[6,4]); if(state.show.field && p.rg>p.a) radialArrowsFromCharge([0,0,0],Math.sign(p.Q||1),12,Math.max(p.rg,1.8)); normalsAndFieldOnSphere(p.rg); text3([p.d,p.b+.12,0],tr('cavidad','cavity')); }
+
+  if(id==='cavity_sphere_ins'){ drawEquipotentialUniformCavitySphere([p.d,0,0],p.b); sphereMesh([0,0,0],p.a,palette.pos,1.7,.62); sphereMesh([p.d,0,0],p.b,palette.matter,2.0,.92,[4,3]); chargeSphereDots(p.a,Math.sign(p.rho||1),{c:[p.d,0,0],b:p.b}); if(state.show.gaussian) sphereMesh([p.d,0,0],p.rg,palette.gold,1.8,.76,[6,4]); if(state.show.field){ const cdir=Math.sign(calc().E||1); [-0.45,0,0.45].forEach(s=>{ const base=[p.d, s*p.b*0.5, 0]; arrow3(vadd(base,[-0.33*cdir,0,0]), vadd(base,[0.55*cdir,0,0]), palette.field, s===0?'E uniforme':''); }); } normalsAndFieldOnSphere(p.rg); text3([p.d,p.b+.12,0],tr('hueco','cavity')); }
+
+  if(id==='infinite_wire' || id==='finite_wire'){ const h=id==='finite_wire'?p.ell:Math.max(p.L*1.6,3.2); drawEquipotentialCylinder([0,0,0],Math.max(.24,p.rg*0.45),p.L); line3([0,-h/2,0],[0,h/2,0], p.lambda>=0?palette.pos:palette.neg, 4.2,1); if(state.show.gaussian) cylinderMesh([0,0,0],p.rg,p.L,palette.gold,1.8,.76,[6,4]); cylinderField3D(p.rg,p.L,Math.sign(p.lambda||1)); normalsAndFieldOnCylinder(p.rg,p.L); text3([0,h/2+.12,0],id==='finite_wire'?'ℓ, λ':'λ'); }
+
+  if(id==='ins_cylinder' || id==='dielectric_cylinder'){ drawEquipotentialCylinder([0,0,0],Math.max(.24,p.a*0.45),p.L); cylinderMesh([0,0,0],p.a,p.L*1.3,id==='dielectric_cylinder'?palette.matter:palette.pos,1.7,.63); chargeCylinderDots(p.a,p.L*1.25,Math.sign(p.rho||1)); if(state.show.gaussian) cylinderMesh([0,0,0],p.rg,p.L,palette.gold,1.8,.76,[6,4]); cylinderField3D(p.rg,p.L,Math.sign(p.rho||1)); normalsAndFieldOnCylinder(p.rg,p.L); text3([p.a+.1,p.L*0.66,0],id==='dielectric_cylinder'?'εr, ρlibre':'ρ'); }
+
+  if(id==='conductor_cylinder'){ drawEquipotentialCylinder([0,0,0],Math.max(.24,p.a*0.45),p.L); cylinderMesh([0,0,0],p.a,p.L*1.3,palette.conductor,2,.72); if(state.show.gaussian) cylinderMesh([0,0,0],p.rg,p.L,palette.gold,1.8,.76,[6,4]); if(p.rg>p.a)cylinderField3D(p.rg,p.L,Math.sign(p.lambda||1)); normalsAndFieldOnCylinder(p.rg,p.L); text3([p.a+.1,p.L*0.66,0],'conductor'); }
+
+  if(id==='cavity_cylinder_ins' || id==='conductor_cylinder_cavity'){ if(id==='cavity_cylinder_ins') drawEquipotentialUniformCavityCylinder([p.d,0,0],p.b,p.L); else drawEquipotentialCylinder([0,0,0],Math.max(.24,p.a*.45),p.L); cylinderMesh([0,0,0],p.a,p.L*1.35,id==='cavity_cylinder_ins'?palette.pos:palette.conductor,1.9,.68); cylinderMesh([p.d,0,0],p.b,p.L*1.38,palette.matter,2.0,.92,[4,3]); if(id==='cavity_cylinder_ins') chargeCylinderDots(p.a,p.L*1.25,Math.sign(p.rho||1),{c:[p.d,0],b:p.b}); if(state.show.gaussian) cylinderMesh(id==='cavity_cylinder_ins'?[p.d,0,0]:[0,0,0],p.rg,p.L,palette.gold,1.8,.76,[6,4]); if(id==='cavity_cylinder_ins' && state.show.field){ const cdir=Math.sign(calc().E||1); [-0.45,0,0.45].forEach(s=>{ const base=[p.d,0,s*p.b*0.45]; arrow3(vadd(base,[-0.33*cdir,0,0]), vadd(base,[0.55*cdir,0,0]), palette.field, s===0?'E uniforme':''); }); } else if(id==='conductor_cylinder_cavity' && p.rg>p.a){ cylinderField3D(p.rg,p.L,Math.sign(p.lambda||1)); } normalsAndFieldOnCylinder(p.rg,p.L); text3([p.d+p.b+.08,p.L*0.66,0],tr('hueco','cavity')); }
+
+  if(id==='cube_center' || id==='cube_vertex'){ const center=[0,0,0], a=p.acube; const srcEq = id==='cube_center' ? [0,0,0] : [-a/2,-a/2,-a/2]; drawEquipotentialSphere(srcEq,Math.max(.24,a*.34)); const pts=cubeMesh(center,a,palette.gold,1.8,.78,[6,4]); highlightFace(pts,state.selectedFace); normalsAndFieldOnCube(a); const src = id==='cube_center' ? [0,0,0] : [-a/2,-a/2,-a/2]; if(state.show.charges) dot3(src,p.Q>=0?palette.pos:palette.neg,6.2,p.Q>=0?'+Q':'−Q'); if(state.show.field){ if(id==='cube_center'){ [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1],unit([1,1,1]),unit([-1,1,1]),unit([1,-1,1]),unit([1,1,-1])].forEach((u,i)=> arrow3(vmul(u,.15), vmul(u,1.6), palette.field, i===0?'E':'') ); }
+      else { [[1,0,0],[0,1,0],[0,0,1],unit([1,1,0]),unit([1,0,1]),unit([0,1,1]),unit([1,1,1])].forEach((u,i)=> arrow3(src, vadd(src,vmul(u,2.0)), palette.field, i===0?'E':'') ); }
+    }
+    text3([0,a/2+.18,0],'Sg',palette.gold);
+  }
+
+  pointMarker(c); renderPrims(); drawGraph(c);
+}
+function renderPrims(){ primitives.sort((a,b)=>b.z-a.z); primitives.forEach(p=>p.fn()); }
+
+function drawGraph(c=calc()){
+  const on = state.show.graph && c.valid && c.graphInfo;
+  $('graphCard').classList.toggle('hidden', !on);
+  $('graphOff').classList.toggle('hidden', on);
+  if(!on){
+    if(state.show.graph && c.valid && !c.graphInfo){
+      $('graphOff').innerHTML = '<b>Este caso no tiene una única gráfica radial E(r) deducida directamente por Gauss.</b><br>En la superficie cúbica estudie el flujo por cara; en geometrías descentradas, E depende de la posición angular además del radio.';
+    } else {
+      $('graphOff').innerHTML = 'Pulse el botón grande <b>“Mostrar gráfico E(r)”</b> ubicado arriba, en la sección <b>3. Visualización e interacción</b>.';
+    }
+    return;
+  }
+  const info=c.graphInfo, cw=GCV.width, ch=GCV.height; GCTX.clearRect(0,0,cw,ch);
+  GCTX.fillStyle=palette.panel2; GCTX.fillRect(0,0,cw,ch);
+  const pad={l:54,r:18,t:18,b:38}, x0=pad.l, y0=ch-pad.b, gw=cw-pad.l-pad.r, gh=ch-pad.t-pad.b;
+  GCTX.strokeStyle=palette.line; GCTX.lineWidth=1;
+  for(let i=0;i<=5;i++){ const y=pad.t+i*gh/5; GCTX.beginPath(); GCTX.moveTo(x0,y); GCTX.lineTo(x0+gw,y); GCTX.stroke(); }
+  for(let i=0;i<=5;i++){ const x=x0+i*gw/5; GCTX.beginPath(); GCTX.moveTo(x,pad.t); GCTX.lineTo(x,y0); GCTX.stroke(); }
+  const maxX = info.max*(state.graphScale/200);
+  let samples=[]; let maxY=0;
+  for(let i=1;i<=260;i++){ const x=maxX*i/260; let y=info.f(x); if(Number.isFinite(y)){ maxY=Math.max(maxY,y); samples.push([x,y]); } }
+  maxY = maxY||1;
+  const sx=x=> x0 + x/maxX*gw, sy=y=> y0 - y/maxY*gh*0.92;
+  GCTX.strokeStyle=palette.graph; GCTX.lineWidth=2.2; GCTX.beginPath(); let started=false;
+  samples.forEach(([x,y])=>{ if(!Number.isFinite(y)) {started=false; return;} const X=sx(x), Y=sy(y); if(!started){GCTX.moveTo(X,Y); started=true;} else GCTX.lineTo(X,Y); }); GCTX.stroke();
+  GCTX.strokeStyle=palette.face; GCTX.setLineDash([5,4]); info.breaks.forEach(b=>{ if(b>0 && b<maxX){ GCTX.beginPath(); GCTX.moveTo(sx(b),pad.t); GCTX.lineTo(sx(b),y0); GCTX.stroke(); } }); GCTX.setLineDash([]);
+  const radial = (state.scenario.includes('wire')||state.scenario.includes('cylinder')) ? Math.hypot(state.P[0],state.P[2]) : norm(state.P);
+  if(radial>0 && radial<maxX){ const yp=info.f(radial); if(Number.isFinite(yp)){ GCTX.strokeStyle='#ffffff'; GCTX.lineWidth=1.4; GCTX.beginPath(); GCTX.moveTo(sx(radial),pad.t); GCTX.lineTo(sx(radial),y0); GCTX.stroke(); GCTX.fillStyle='#ffffff'; GCTX.beginPath(); GCTX.arc(sx(radial),sy(yp),4,0,Math.PI*2); GCTX.fill(); } }
+  GCTX.fillStyle=palette.text; GCTX.font='700 12px Inter,Arial'; GCTX.fillText(info.xLabel, x0+gw-30, ch-12); GCTX.fillText('E (N/C)', 10, pad.t+2);
+  GCTX.fillStyle=palette.muted; GCTX.font='600 11px Inter,Arial';
+  for(let i=0;i<=5;i++){ const x=maxX*i/5; GCTX.fillText(fmt(x), sx(x)-10, y0+16); const y=maxY*(1-i/5); GCTX.fillText(fmt(y), 6, sy(y)+4); }
+  $('graphNote').textContent = `${info.note}  ${tr('Punto actual del gráfico','Current graph point')}: ${info.xLabel.split(' ')[0]}=${fmt(radial)} m, E=${fmt(c.E)} N/C.`;
+}
+
+function updateAll(){ fillSelectors(); renderParams(); renderToggles(); syncPrimaryButtons(); applyTheme(state.theme); updatePanels(calc()); draw(); }
+
+function tabSetup(){ document.querySelectorAll('.tab').forEach(btn=>btn.onclick=()=>openTab(btn.dataset.tab)); }
+
+function bind(){
+  $('scenario').onchange=e=>{ state.scenario=e.target.value; setDefaultPoint(); renderParams(); updateAll(); };
+  $('lang').onchange=e=>{ state.lang=e.target.value; updateAll(); };
+  $('theme').onchange=e=>{ state.theme=e.target.value; applyTheme(state.theme); };
+  $('level').onchange=e=>{ state.level=e.target.value; draw(); };
+  $('theta').oninput=e=>{ state.theta=Number(e.target.value); draw(); };
+  $('vectorScale').oninput=e=>{ state.vectorScale=Number(e.target.value); draw(); };
+  $('graphScale').oninput=e=>{ state.graphScale=Number(e.target.value); drawGraph(); };
+  $('faceSelect').onchange=e=>{ state.selectedFace=e.target.value; draw(); };
+  $('graphToggleBig').onclick=()=>{ state.show.graph=!state.show.graph; syncPrimaryButtons(); openTab('graph'); draw(); };
+  $('movePToggleBig').onclick=()=>{ state.show.moveP=!state.show.moveP; syncPrimaryButtons(); draw(); };
+  $('resetCam').onclick=()=>{ state.yaw=0.65; state.pitch=0.42; state.zoom=1.05; draw(); };
+  $('capture').onclick=()=>{ draw(); const a=document.createElement('a'); a.href=CV.toDataURL('image/png'); a.download='GaussLab_AI_ProfWong_v5_Presentacion.png'; a.click(); };
+  window.addEventListener('resize', resize);
+
+  const viewer=$('viewer');
+  viewer.addEventListener('pointerdown', ev=>{
+    const rect=CV.getBoundingClientRect(); const x=ev.clientX-rect.left, y=ev.clientY-rect.top;
+    const pp=state.projectedP;
+    if(state.show.moveP && pp && Math.hypot(x-pp.x,y-pp.y) < 18){ state.dragMode='point'; }
+    else { state.dragMode='camera'; }
+    state._last={x:ev.clientX,y:ev.clientY}; viewer.setPointerCapture(ev.pointerId);
+  });
+  viewer.addEventListener('pointermove', ev=>{
+    if(!state.dragMode || !state._last) return; const dx=ev.clientX-state._last.x, dy=ev.clientY-state._last.y; state._last={x:ev.clientX,y:ev.clientY};
+    if(state.dragMode==='camera'){
+      state.yaw += dx*0.012; state.pitch = clamp(state.pitch + dy*0.012, -1.45, 1.45); draw();
+    } else if(state.dragMode==='point'){
+      const s = Math.min(W,H)*0.16*state.zoom;
+      if(state.scenario.includes('wire')||state.scenario.includes('cylinder')){ state.P[0]+=dx/s; state.P[2]-=dy/s; }
+      else { state.P[0]+=dx/s; state.P[1]-=dy/s; }
+      clampPoint(); draw();
+    }
+  });
+  viewer.addEventListener('pointerup', ()=>{ state.dragMode=null; state._last=null; });
+  viewer.addEventListener('pointerleave', ()=>{ state.dragMode=null; state._last=null; });
+  viewer.addEventListener('wheel', ev=>{ ev.preventDefault(); state.zoom = clamp(state.zoom * (ev.deltaY<0?1.08:0.92), 0.55, 2.2); draw(); }, {passive:false});
+}
+
+
+// ---------- v5 upgrades: bilingual interface, solid translucent views, dynamic graphs and presentation palettes ----------
+const fieldSchemes={softGreen:'#58b88a',sky:'#55a9d8',violet:'#9675d6',orange:'#d89643',gray:'#8a98aa'};
+function fieldColor(){
+  if(state.theme==='board'){
+    const chalk={softGreen:'#f7f2dd',sky:'#9edcff',violet:'#d8b4fe',orange:'#ffb35c',gray:'#e5e0cf'};
+    return chalk[state.fieldStyle] || '#f7f2dd';
+  }
+  return fieldSchemes[state.fieldStyle] || palette.field;
+}
+function hexAlpha(hex,a){ const h=hex.replace('#',''); const n=parseInt(h.length===3?h.split('').map(x=>x+x).join(''):h,16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
+function applyTheme(name){
+  palette={...themes[name]}; palette.field=fieldColor();
+  for(const [k,v] of Object.entries(palette)) document.documentElement.style.setProperty('--'+k,v);
+  document.body.dataset.theme=name;
+  draw(); drawGraph();
+}
+function uiText(){
+  const es=state.lang==='es';
+  $('titleMain').textContent=es?'GaussLab-AI 3D+ v7 · Tutor de Ley de Gauss':'GaussLab-AI 3D+ · Gauss Law Tutor';
+  $('subTitle').textContent=es?'Tutorial 3D con desarrollo integral · superficies esféricas, cilíndricas y cúbicas · Autor: Prof. Wong':'3D tutorial with integral derivations · spherical, cylindrical and cubic surfaces · Author: Prof. Wong';
+  $('secModel').textContent=es?'1. Modelo físico':'1. Physical model';
+  $('secParameters').textContent=es?'2. Parámetros SI':'2. SI parameters';
+  $('secVisual').textContent=es?'3. Visualización e interacción':'3. Visualization and interaction';
+  $('lblLevel').textContent=es?'Nivel':'Level'; $('lblTheta').textContent=es?'Ángulo de muestra sobre S, θ (°)':'Sample angle on S, θ (°)';
+  $('lblVectorScale').textContent=es?'Escala visual del vector E(P)':'Visual scale of E(P) vector'; $('lblLineDensity').textContent=es?'Número de líneas 3D':'Number of 3D lines';
+  $('lblFieldColor').textContent=es?'Paleta del campo E':'E-field palette'; $('lblLineWidth').textContent=es?'Grosor de vectores':'Vector thickness'; $('lblSolidAlpha').textContent=es?'Transparencia del sólido':'Solid transparency';
+  $('lblGraphScale').textContent=es?'Escala del gráfico E(r)':'E(r) graph scale'; $('lblQuantity').textContent=es?'Magnitud graficada':'Quantity graphed'; $('lblFace').textContent=es?'Cara del cubo':'Cube face'; $('lblGaussAlpha').textContent=es?'Transparencia Sup. G.':'Gaussian surface transparency';
+  $('tabResult').textContent=es?'Resultado':'Result'; $('tabDerive').textContent=es?'Deducción completa':'Full derivation'; $('tabGraph').textContent=es?'Gráfico E(r)':'E(r) graph'; $('tabRefs').textContent=es?'Fuentes':'Sources';
+  $('resetCam').textContent=es?'Recentrar 3D':'Reset 3D';
+}
+function fillSelectors(){
+  uiText(); const sc=$('scenario'); sc.innerHTML=''; Object.entries(defs).forEach(([id,def])=>{const o=document.createElement('option');o.value=id;o.textContent=def[state.lang];sc.appendChild(o);}); sc.value=state.scenario;
+  const names=state.lang==='es'?{dark:'Laboratorio oscuro',light:'Claro',board:'Pizarra verde',darkgrid:'Oscuro cuadriculado',lightgrid:'Claro cuadriculado',mit:'MIT rojo',neon:'Campo neón',paper:'Papel académico',geogebra:'GeoGebra',graphite:'Grafito',copper:'Cobre'}:{dark:'Dark laboratory',light:'Light',board:'Green chalkboard',darkgrid:'Dark grid',lightgrid:'Light notebook grid',mit:'MIT red',neon:'Neon field',paper:'Academic paper',geogebra:'GeoGebra',graphite:'Graphite',copper:'Copper'};
+  const th=$('theme'); th.innerHTML=''; Object.keys(themes).forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent=names[id]||id;th.appendChild(o);}); th.value=state.theme;
+  const fs=$('faceSelect'); fs.innerHTML=''; faceOptions.forEach(f=>{const o=document.createElement('option');o.value=f.id;o.textContent=state.lang==='es'?f.es:f.en;fs.appendChild(o);}); fs.value=state.selectedFace;
+}
+function renderParams(){
+  const host=$('params'); host.innerHTML=''; defs[state.scenario].params.forEach(pid=>{const m=paramMeta[pid], val=state.params[state.scenario][pid], lab=state.lang==='es'?m.es:(m.en||m.es); const wrap=document.createElement('div'); wrap.className='param'; wrap.innerHTML=`<div class="paramTop"><span>${lab}</span><span class="value" id="v_${pid}">${val} ${m.unit}</span></div><div class="paramInputs"><input data-range="${pid}" type="range" min="${m.min}" max="${m.max}" step="${m.step}" value="${val}"><input data-number="${pid}" type="number" min="${m.min}" max="${m.max}" step="${m.step}" value="${val}" aria-label="${lab}"></div>`; host.appendChild(wrap);});
+  const change=(pid,value)=>{ const m=paramMeta[pid]; let v=Number(value); if(!Number.isFinite(v)) return; v=clamp(v,m.min,m.max); state.params[state.scenario][pid]=v; const r=host.querySelector(`[data-range="${pid}"]`), n=host.querySelector(`[data-number="${pid}"]`); if(r) r.value=v; if(n) n.value=v; $(`v_${pid}`).textContent=`${v} ${m.unit}`.trim(); clampPoint(); draw(); };
+  host.querySelectorAll('input[data-range]').forEach(inp=>inp.oninput=e=>change(e.target.dataset.range,e.target.value)); host.querySelectorAll('input[data-number]').forEach(inp=>{inp.onchange=e=>change(e.target.dataset.number,e.target.value); inp.onkeydown=e=>{if(e.key==='Enter') change(e.target.dataset.number,e.target.value);};});
+  $('faceWrap').classList.toggle('hidden',!['cube_center','cube_vertex'].includes(state.scenario)); $('advancedPanel').classList.toggle('hidden',!state.show.advanced); $('renderMode').value=state.renderMode; $('graphQuantity').value=state.graphQuantity; $('vRefScale').value=state.vRefScale; $('equipotentialMode').value=state.show.equipotential?'on':'off';
+}
+function renderToggles(){
+  const es=state.lang==='es'; const labels={field:es?'Campo eléctrico 3D':'3D electric field',gaussian:es?'Borde Sup. G.':'Gaussian wireframe',normals:'Normal dA',charges:es?'Cargas / rho':'Charges / rho',labels:es?'Etiquetas':'Labels',axes:es?'Ejes':'Axes',point:es?'Punto P':'Point P',expressions:es?'Expresiones':'Expressions',equipotential:es?'Equipotenciales':'Equipotentials'};
+  const host=$('toggles');host.innerHTML=''; ['field','gaussian','normals','charges','labels','axes','point','expressions','equipotential'].forEach(k=>{const b=document.createElement('button');b.type='button';b.className='toggle'+(state.show[k]?' on':'');b.textContent=labels[k];b.onclick=()=>{state.show[k]=!state.show[k];draw();renderToggles();};host.appendChild(b);});
+}
+function syncPrimaryButtons(){
+  const es=state.lang==='es'; const controls=[['graphToggleBig','graph',es?'Mostrar gráfico':'Show graph',es?'Gráfico: activado':'Graph: enabled'],['movePToggleBig','moveP',es?'Mover punto P':'Move point P',es?'Mover P: activado':'Move P: enabled'],['solidObjectBig','solidObject',es?'Sólido translúcido':'Translucent solid',es?'Sólido: activado':'Solid: enabled'],['solidGaussBig','solidGaussian',es?'Sup. G. sólida':'Solid Gaussian surface',es?'Sup. G.: activada':'Gaussian surface: enabled'],['advancedBig','advanced',es?'Opciones avanzadas':'Advanced options',es?'Opciones avanzadas: activas':'Advanced options: enabled']];
+  controls.forEach(([id,key,off,on])=>{const b=$(id);if(!b)return;b.classList.toggle('on',state.show[key]);b.querySelector('strong').textContent=state.show[key]?on:off;});
+}
+function arrow3(a,b,color,label=''){ line3(a,b,color, color===palette.field ? state.fieldWidth : 1.4, .78); const u=unit(vsub(b,a)); let ref=Math.abs(u[0])<0.8?[1,0,0]:[0,1,0]; let side=unit(cross(u,ref)); if(norm(side)<1e-6)side=[0,0,1]; const h=.085; line3(b,vadd(vadd(b,vmul(u,-h)),vmul(side,h*.40)),color,color===palette.field?state.fieldWidth:1.4,.78); line3(b,vadd(vadd(b,vmul(u,-h)),vmul(side,-h*.40)),color,color===palette.field?state.fieldWidth:1.4,.78); if(label) text3(b,label,color); }
+function sphereMesh(c,r,color,width=1.0,alpha=.55,dash=[]){
+  const isG=color===palette.gold, solid=isG?state.show.solidGaussian:state.show.solidObject, fillA=isG?state.gaussAlpha:state.solidAlpha;
+  if(solid){for(let phi=-Math.PI/2;phi<Math.PI/2-.001;phi+=Math.PI/10){for(let t=0;t<Math.PI*2-.001;t+=Math.PI/16){const p1=vadd(c,[r*Math.cos(phi)*Math.cos(t),r*Math.sin(phi),r*Math.cos(phi)*Math.sin(t)]),p2=vadd(c,[r*Math.cos(phi)*Math.cos(t+Math.PI/16),r*Math.sin(phi),r*Math.cos(phi)*Math.sin(t+Math.PI/16)]),p3=vadd(c,[r*Math.cos(phi+Math.PI/10)*Math.cos(t+Math.PI/16),r*Math.sin(phi+Math.PI/10),r*Math.cos(phi+Math.PI/10)*Math.sin(t+Math.PI/16)]),p4=vadd(c,[r*Math.cos(phi+Math.PI/10)*Math.cos(t),r*Math.sin(phi+Math.PI/10),r*Math.cos(phi+Math.PI/10)*Math.sin(t)]);poly3([p1,p2,p3,p4],color,.25,.30,[],hexAlpha(color,fillA));}}}
+  const drawLines = !(solid && state.renderMode==='solidNoLines' && !isG); if(drawLines){for(let phi=-Math.PI/3;phi<=Math.PI/3+.01;phi+=Math.PI/6){let rr=r*Math.cos(phi),yy=r*Math.sin(phi),pts=[];for(let t=0;t<=Math.PI*2+.02;t+=Math.PI/24)pts.push(vadd(c,[rr*Math.cos(t),yy,rr*Math.sin(t)]));poly3(pts,color,isG?1.1:.65,alpha,dash);} for(let t=0;t<Math.PI;t+=Math.PI/6){let pts=[];for(let p=-Math.PI/2;p<=Math.PI/2+.02;p+=Math.PI/32)pts.push(vadd(c,[r*Math.cos(p)*Math.cos(t),r*Math.sin(p),r*Math.cos(p)*Math.sin(t)]));poly3(pts,color,isG?1.1:.65,alpha,dash);}}
+}
+function cylinderMesh(c,r,h,color,width=1.0,alpha=.6,dash=[]){
+ const isG=color===palette.gold, solid=isG?state.show.solidGaussian:state.show.solidObject, fillA=isG?state.gaussAlpha:state.solidAlpha;
+ if(solid){for(let t=0;t<Math.PI*2-.01;t+=Math.PI/18){const p1=vadd(c,[r*Math.cos(t),-h/2,r*Math.sin(t)]),p2=vadd(c,[r*Math.cos(t+Math.PI/18),-h/2,r*Math.sin(t+Math.PI/18)]),p3=vadd(c,[r*Math.cos(t+Math.PI/18),h/2,r*Math.sin(t+Math.PI/18)]),p4=vadd(c,[r*Math.cos(t),h/2,r*Math.sin(t)]);poly3([p1,p2,p3,p4],color,.25,.35,[],hexAlpha(color,fillA));}}
+ const drawLines = !(solid && state.renderMode==='solidNoLines' && !isG); if(drawLines){for(const y of [-h/2,h/2]){let pts=[];for(let t=0;t<=Math.PI*2+.02;t+=Math.PI/30)pts.push(vadd(c,[r*Math.cos(t),y,r*Math.sin(t)]));poly3(pts,color,isG?1.1:.65,alpha,dash);} for(let t=0;t<Math.PI*2;t+=Math.PI/8)line3(vadd(c,[r*Math.cos(t),-h/2,r*Math.sin(t)]),vadd(c,[r*Math.cos(t),h/2,r*Math.sin(t)]),color,isG?1.1:.65,alpha,dash);} 
+}
+function cubeMesh(center,a,color,width=1.1,alpha=.75,dash=[]){ const h=a/2,pts={a:vadd(center,[-h,-h,-h]),b:vadd(center,[h,-h,-h]),c:vadd(center,[h,h,-h]),d:vadd(center,[-h,h,-h]),e:vadd(center,[-h,-h,h]),f:vadd(center,[h,-h,h]),g:vadd(center,[h,h,h]),h:vadd(center,[-h,h,h])}; const faces=[['a','b','c','d'],['e','f','g','h'],['a','b','f','e'],['d','c','g','h'],['a','d','h','e'],['b','c','g','f']]; const solid=state.show.solidGaussian||state.show.solidObject; if(solid)faces.forEach(face=>poly3(face.map(k=>pts[k]),color,.28,.25,[],hexAlpha(color,state.show.solidGaussian?state.gaussAlpha:state.solidAlpha))); const drawLines = !(solid && state.renderMode==='solidNoLines' && color!==palette.gold); if(drawLines)[['a','b'],['b','c'],['c','d'],['d','a'],['e','f'],['f','g'],['g','h'],['h','e'],['a','e'],['b','f'],['c','g'],['d','h']].forEach(([u,v])=>line3(pts[u],pts[v],color,1.0,alpha,dash)); return pts; }
+function countFieldLines(source){ const raw=Math.abs(source||0); return Math.round(clamp(state.lineDensity + raw/5,4,40)); }
+function radialArrowsFromCharge(src,sign,count=12,span=1.8){ if(!state.show.field)return; const n=countFieldLines(state.params[state.scenario].Q ?? state.params[state.scenario].rho ?? state.params[state.scenario].lambda ?? count); const golden=Math.PI*(3-Math.sqrt(5)); for(let i=0;i<n;i++){const y=1-(i/(Math.max(1,n-1)))*2, rr=Math.sqrt(Math.max(0,1-y*y)), t=golden*i, u=[rr*Math.cos(t),y,rr*Math.sin(t)], a=vadd(src,vmul(u,.17)), b=vadd(src,vmul(u,span)); if(sign>=0) arrow3(a,b,palette.field,i===0?'E':''); else arrow3(b,a,palette.field,i===0?'E':'');}}
+function cylinderField3D(radius,h,sign){ if(!state.show.field)return; const n=countFieldLines(state.params[state.scenario].lambda ?? state.params[state.scenario].rho ?? 8), ring=Math.max(6,Math.floor(n/2)), layers=Math.max(2,Math.floor(n/ring)); for(let j=0;j<layers;j++){const y=-h*.38 + (layers===1?0:j/(layers-1))*h*.76; for(let i=0;i<ring;i++){const t=2*Math.PI*i/ring, u=[Math.cos(t),0,Math.sin(t)], a=[u[0]*.18,y,u[2]*.18], b=[u[0]*Math.max(radius,1.35),y,u[2]*Math.max(radius,1.35)]; if(sign>=0) arrow3(a,b,palette.field,(j===0&&i===0)?'E':''); else arrow3(b,a,palette.field,(j===0&&i===0)?'E':''); }}}
+function drawEquipotentialSphere(center, baseR){ if(!state.show.equipotential) return; [0.45,0.72,1.05,1.42].forEach(k=>sphereMesh(center,Math.max(.14,baseR*k),hexAlpha(palette.normal,0.75),0.6,0.18,[3,5])); }
+function drawEquipotentialCylinder(center, baseR, h){ if(!state.show.equipotential) return; [0.45,0.72,1.05,1.42].forEach(k=>cylinderMesh(center,Math.max(.14,baseR*k),h,hexAlpha(palette.normal,0.75),0.6,0.16,[3,5])); }
+function mathBlock(title,body){return `<div class="deriveBlock"><h3>${title}</h3><div class="equation">${body}</div></div>`;}
+function ln(s,cls='line'){return `<span class="${cls}">${s}</span>`;}
+function detailedDerivation(c){
+ const id=state.scenario,p=state.params[id],R=p.rg,a=p.a,L=p.L; let h='';
+ h+=mathBlock(tr('1. Ley de Gauss y unidades','1. Gauss law and units'),ln('&oint;<sub>S</sub> <b>E</b> &middot; d<b>A</b> = Q<sub>enc</sub> / &epsilon;<sub>0</sub>')+ln('&epsilon;<sub>0</sub> = 8.854 187 8188 &times; 10<sup>&minus;12</sup> F/m')+ln('[&Phi;<sub>E</sub>] = N&middot;m<sup>2</sup>/C &nbsp;&nbsp;&nbsp; [E] = N/C'));
+ if(id==='ins_sphere'){
+  h+=mathBlock(tr('2. Interior: carga encerrada','2. Inside: enclosed charge'),ln('Q<sub>enc</sub>(r) = &int;<sub>0</sub><sup>r</sup> &rho; (4&pi;r&prime;<sup>2</sup>) dr&prime;')+ln('= 4&pi;&rho; [r&prime;<sup>3</sup>/3]<sub>0</sub><sup>r</sup> = 4&pi;&rho;r<sup>3</sup>/3','line indent'));
+  h+=mathBlock(tr('3. Interior: integral de flujo','3. Inside: flux integral'),ln('&int;<sub>0</sub><sup>2&pi;</sup>&int;<sub>0</sub><sup>&pi;</sup> E(r) r<sup>2</sup> sen&theta; d&theta; d&phi; = Q<sub>enc</sub>(r)/&epsilon;<sub>0</sub>')+ln('4&pi;r<sup>2</sup>E(r) = 4&pi;&rho;r<sup>3</sup>/(3&epsilon;<sub>0</sub>)')+ln('E(r) = &rho;r/(3&epsilon;<sub>0</sub>)','line result'));
+  h+=mathBlock(tr('4. Exterior','4. Outside'),ln('Q<sub>enc</sub> = &int;<sub>0</sub><sup>a</sup> &rho;(4&pi;r&prime;<sup>2</sup>)dr&prime; = 4&pi;&rho;a<sup>3</sup>/3')+ln('E(r) = &rho;a<sup>3</sup>/(3&epsilon;<sub>0</sub>r<sup>2</sup>)','line result'));
+  h+=`<div class="finalExpr">E(r) = { &rho;r/(3&epsilon;<sub>0</sub>), &nbsp; 0 &le; r &lt; a<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &rho;a<sup>3</sup>/(3&epsilon;<sub>0</sub>r<sup>2</sup>), &nbsp; r &ge; a }</div>`;
+ } else if(id==='dielectric_sphere'){
+  h+=mathBlock(tr('2. Desplazamiento eléctrico con carga libre','2. Electric displacement with free charge'),ln('&oint;<sub>S</sub> <b>D</b>&middot;d<b>A</b> = Q<sub>libre, enc</sub>')+ln('Q<sub>libre, enc</sub>(r&lt;a) = &int;<sub>0</sub><sup>r</sup> &rho;<sub>f</sub>4&pi;r&prime;<sup>2</sup>dr&prime; = 4&pi;&rho;<sub>f</sub>r<sup>3</sup>/3')+ln('D(r) = &rho;<sub>f</sub>r/3'));
+  h+=mathBlock(tr('3. Conversión D → E','3. Conversion D → E'),ln('Dentro: &nbsp; E<sub>in</sub>(r) = D(r)/(&epsilon;<sub>0</sub>&epsilon;<sub>r</sub>) = &rho;<sub>f</sub>r/(3&epsilon;<sub>0</sub>&epsilon;<sub>r</sub>)')+ln('Fuera: &nbsp; E<sub>out</sub>(r) = D(r)/&epsilon;<sub>0</sub> = &rho;<sub>f</sub>a<sup>3</sup>/(3&epsilon;<sub>0</sub>r<sup>2</sup>)'));
+  h+=mathBlock(tr('4. Frontera r = a','4. Boundary r = a'),ln('D<sub>n,out</sub> &minus; D<sub>n,in</sub> = &sigma;<sub>libre</sub> = 0 &nbsp;&rArr;&nbsp; D<sub>n</sub> continuo')+ln('E<sub>out</sub>(a) = D(a)/&epsilon;<sub>0</sub> = &epsilon;<sub>r</sub> E<sub>in</sub>(a)','line result'));
+  h+=`<div class="warningTutor">${tr('El salto de E en la gráfica es correcto para un dieléctrico rodeado de vacío. La curva continua usual de los capítulos introductorios corresponde a una esfera aislante sin cambio de permitividad.','The E jump in the graph is correct for a dielectric surrounded by vacuum. The usual continuous introductory curve corresponds to an insulating sphere without a permittivity change.')}</div>`;
+ } else if(id==='infinite_wire'){
+  h+=mathBlock(tr('2. Carga encerrada','2. Enclosed charge'),ln('Q<sub>enc</sub> = &int;<sub>0</sub><sup>L</sup> &lambda; dz = &lambda;L'));
+  h+=mathBlock(tr('3. Flujo lateral y tapas','3. Lateral and cap flux'),ln('&Phi; = &int;<sub>0</sub><sup>L</sup>&int;<sub>0</sub><sup>2&pi;</sup> E(&rho;) &rho; d&phi; dz + &Phi;<sub>tapas</sub>')+ln('&Phi;<sub>tapas</sub> = 0, porque <b>E</b> &perp; d<b>A</b> en cada tapa')+ln('&Phi; = E(&rho;)(2&pi;&rho;L)'));
+  h+=`<div class="finalExpr"><b>E</b>(&rho;) = [&lambda;/(2&pi;&epsilon;<sub>0</sub>&rho;)] &rho;&#770;</div>`;
+ } else if(id==='ins_cylinder'){
+  h+=mathBlock(tr('2. Carga y flujo interior','2. Interior charge and flux'),ln('Q<sub>enc</sub>(&rho;) = &int;<sub>0</sub><sup>L</sup>&int;<sub>0</sub><sup>2&pi;</sup>&int;<sub>0</sub><sup>&rho;</sup> &rho;<sub>v</sub>s ds d&phi; dz = &rho;<sub>v</sub>&pi;&rho;<sup>2</sup>L')+ln('E(&rho;)2&pi;&rho;L = Q<sub>enc</sub>/&epsilon;<sub>0</sub>')+ln('E(&rho;) = &rho;<sub>v</sub>&rho;/(2&epsilon;<sub>0</sub>)','line result'));
+  h+=mathBlock(tr('3. Exterior','3. Outside'),ln('Q<sub>enc</sub> = &rho;<sub>v</sub>&pi;a<sup>2</sup>L')+ln('E(&rho;) = &rho;<sub>v</sub>a<sup>2</sup>/(2&epsilon;<sub>0</sub>&rho;)','line result'));
+ } else if(id==='cube_center'){
+  h+=mathBlock(tr('2. Flujo total','2. Total flux'),ln('&Phi;<sub>total</sub> = &oint;<sub>S</sub> <b>E</b>&middot;d<b>A</b> = Q/&epsilon;<sub>0</sub>'));
+  h+=mathBlock(tr('3. Seis caras equivalentes','3. Six equivalent faces'),ln('6&Phi;<sub>cara</sub> = Q/&epsilon;<sub>0</sub>')+ln('&Phi;<sub>cara</sub> = Q/(6&epsilon;<sub>0</sub>)','line result'));
+ } else if(id==='cube_vertex'){
+  h+=mathBlock(tr('2. Construcción de ocho cubos','2. Eight-cube construction'),ln('8&Phi;<sub>cubo</sub> = Q/&epsilon;<sub>0</sub> &nbsp;&rArr;&nbsp; &Phi;<sub>cubo</sub> = Q/(8&epsilon;<sub>0</sub>)'));
+  h+=mathBlock(tr('3. Cara seleccionada','3. Selected face'),ln('En las tres caras que contienen el vértice: <b>E</b>&middot;d<b>A</b> = 0')+ln('En las tres caras opuestas: 3&Phi;<sub>cara</sub> = Q/(8&epsilon;<sub>0</sub>)')+ln('&Phi;<sub>cara opuesta</sub> = Q/(24&epsilon;<sub>0</sub>)','line result'));
+ } else {
+  h+=mathBlock(tr('2. Desarrollo del modelo seleccionado','2. Derivation for selected model'),ln((c.derive||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'))+ln((c.formula||'').replaceAll('\n','<br>'),'line result'));
+ }
+ if((state.graphQuantity==='V' || state.graphQuantity==='EV') && c.graphInfo && c.graphInfo.fV){ h+=mathBlock(tr('Potencial eléctrico','Electric potential'),ln('V(r) = -&int; <b>E</b>&middot;d<b>l</b> + C')+ln(tr('Para este gráfico se usa una referencia conveniente y V se dibuja por tramos cuando corresponde.','For this graph a convenient reference is used and V is drawn piecewise when needed.'))); }
+ if(state.level==='school') h+=`<div class="researchNote"><b>${tr('Nivel colegio:','School level:')}</b> ${tr('observe primero la simetría, la carga encerrada y la dirección de las líneas antes de operar.','first identify symmetry, enclosed charge and field-line direction before calculating.')}</div>`;
+ if(state.level==='research') h+=`<div class="researchNote"><b>${tr('Nivel doctorado / investigación:','Research/doctoral level:')}</b> ${tr('la formulación clásica se completa con condiciones de frontera de Maxwell. Para dieléctricos, distinga carga libre, carga ligada, D y E. No se añade “cuántica” artificialmente: la electrostática macroscópica aquí es clásica y suficiente.','the classical formulation is completed by Maxwell boundary conditions. For dielectrics distinguish free charge, bound charge, D and E. Quantum language is not added artificially: the macroscopic electrostatics here is classical and sufficient.')}</div>`;
+ return h;
+}
+function resizeGraphCanvas(){ const card=$('graphCard'); if(!card || card.classList.contains('hidden')) return; const headerH=$('graphHeader')?$('graphHeader').offsetHeight:0; const tooltipH=$('graphTooltip')?$('graphTooltip').offsetHeight:0; const noteH=$('graphNote')?$('graphNote').offsetHeight:0; const targetW=Math.max(320,Math.floor(card.clientWidth-16)); const targetH=Math.max(180,Math.floor(card.clientHeight-headerH-tooltipH-noteH-22)); if(GCV.width!==targetW || GCV.height!==targetH){ GCV.width=targetW; GCV.height=targetH; }}
+function drawCurve(ctx,sx,sy,samples,color,width){ ctx.strokeStyle=color; ctx.lineWidth=width; ctx.beginPath(); let started=false; for(const [x,y,breakSeg] of samples){ if(breakSeg || !Number.isFinite(y)){started=false; continue;} const X=sx(x),Y=sy(y); if(!started){ctx.moveTo(X,Y); started=true;} else ctx.lineTo(X,Y);} ctx.stroke(); }
+function buildSamples(f,maxX,breaks=[],discontinuous=[]){ const arr=[]; const disc=discontinuous||[]; for(let i=1;i<=420;i++){ const x=maxX*i/420; const y=f(x); let br=false; for(const b of disc){ if(Math.abs(x-b)<maxX/420*1.4){ br=true; break; } } arr.push([x,y,br]); } return arr; }
+function drawGraph(c=calc()){
+ const on=state.show.graph && c.valid && c.graphInfo; $('graphCard').classList.toggle('hidden',!on); $('graphOff').classList.toggle('hidden',on); if(!on){if(state.show.graph&&c.valid&&!c.graphInfo)$('graphOff').innerHTML=tr('<b>Este caso no tiene una única gráfica radial E(r) por simetría.</b> Use el análisis de flujo por caras o posición.','<b>This case has no single radial E(r) graph from symmetry.</b> Use face-flux or position analysis.'); return;}
+ const card=$('graphCard'); card.classList.add('graphFloat'); resizeGraphCanvas(); const info=c.graphInfo, cw=GCV.width,ch=GCV.height; const showV = (state.graphQuantity==='V' || state.graphQuantity==='EV') && !!info.fV; const showD = state.graphQuantity==='D' && !!info.fD; const showE = !showD; const maxX=info.max*(state.graphScale/200)*(state.graphWindowScale/100); const pad={l:62,r:18,t:18,b:42}, x0=pad.l, y0=ch-pad.b, gw=cw-pad.l-pad.r, gh=ch-pad.t-pad.b; const sx=x=>x0+x/maxX*gw;
+ let maxY=0; const disc = info.discontinuous||[]; const eSamples = showE?buildSamples(info.f,maxX,info.breaks,disc):[]; const dSamples = showD?buildSamples(info.fD,maxX,info.breaks,[]):[]; const vSamples = showV?buildSamples(info.fV,maxX,info.breaks,[]):[]; [eSamples,dSamples,vSamples].forEach(set=>set.forEach(([x,y])=>{ if(Number.isFinite(y)) maxY=Math.max(maxY,y); })); maxY=maxY||1; const sy=y=>y0-y/maxY*gh*0.92;
+ GCTX.clearRect(0,0,cw,ch); GCTX.fillStyle=palette.panel2; GCTX.fillRect(0,0,cw,ch); GCTX.strokeStyle=palette.line; GCTX.lineWidth=1; for(let i=0;i<=5;i++){let y=pad.t+i*gh/5; GCTX.beginPath(); GCTX.moveTo(x0,y); GCTX.lineTo(x0+gw,y); GCTX.stroke();} for(let i=0;i<=5;i++){let x=x0+i*gw/5; GCTX.beginPath(); GCTX.moveTo(x,pad.t); GCTX.lineTo(x,y0); GCTX.stroke();}
+ if(showE) drawCurve(GCTX,sx,sy,eSamples,palette.graph,2.8); if(showD) drawCurve(GCTX,sx,sy,dSamples,palette.normal,2.5); if(showV) drawCurve(GCTX,sx,sy,vSamples,'#ffb703',2.2);
+ GCTX.strokeStyle=palette.face; GCTX.setLineDash([5,4]); (info.breaks||[]).forEach(b=>{ if(b>0&&b<maxX){ GCTX.beginPath(); GCTX.moveTo(sx(b),pad.t); GCTX.lineTo(sx(b),y0); GCTX.stroke(); } }); GCTX.setLineDash([]);
+ const radialP=(state.scenario.includes('wire')||state.scenario.includes('cylinder'))?Math.hypot(state.P[0],state.P[2]):norm(state.P); const cursorR=state.graphCursor!==null?state.graphCursor:radialP; let t=''; if(cursorR>0&&cursorR<maxX){ GCTX.strokeStyle=palette.text; GCTX.lineWidth=1.2; GCTX.beginPath(); GCTX.moveTo(sx(cursorR),pad.t); GCTX.lineTo(sx(cursorR),y0); GCTX.stroke(); const labels=[]; if(showE){ const y=info.f(cursorR); if(Number.isFinite(y)){ GCTX.fillStyle=palette.text; GCTX.beginPath(); GCTX.arc(sx(cursorR),sy(y),4.6,0,Math.PI*2); GCTX.fill(); labels.push(`E = ${fmt(y)} N/C`);} } if(showD){ const y=info.fD(cursorR); if(Number.isFinite(y)){ GCTX.fillStyle=palette.normal; GCTX.beginPath(); GCTX.arc(sx(cursorR),sy(y),4.3,0,Math.PI*2); GCTX.fill(); labels.push(`D = ${fmt(y)} C/m²`);} } if(showV){ const y=info.fV(cursorR); if(Number.isFinite(y)){ GCTX.fillStyle='#ffb703'; GCTX.beginPath(); GCTX.arc(sx(cursorR),sy(y),4.1,0,Math.PI*2); GCTX.fill(); labels.push(`V = ${fmt(y)} V`);} } t=`${info.xLabel.split(' ')[0]} = ${fmt(cursorR)} m   |   ` + labels.join('   |   '); } $('graphTooltip').textContent=t || tr('Mueva el mouse sobre la gráfica.','Move the mouse over the graph.');
+ GCTX.fillStyle=palette.text; GCTX.font='700 12px Inter,Arial'; GCTX.fillText(info.xLabel,x0+gw-34,ch-12); GCTX.fillText(state.graphQuantity==='D'?'D (C/m²)':state.graphQuantity==='V'?'V (V)':state.graphQuantity==='EV'?'E / V':'E (N/C)',8,pad.t); GCTX.fillStyle=palette.muted; GCTX.font='600 11px Inter,Arial'; for(let i=0;i<=5;i++){let x=maxX*i/5; GCTX.fillText(fmt(x),sx(x)-10,y0+17); let y=maxY*(1-i/5); GCTX.fillText(fmt(y),5,sy(y)+4);} $('graphNote').textContent=info.note + ' ' + (showV?tr('Si se muestra V, recuerde que en alambres/cilindros es relativo a un radio de referencia.','If V is shown, remember that for wires/cylinders it is relative to a reference radius.'):''); }
+function bindV5(){
+ $('solidObjectBig').onclick=()=>{state.show.solidObject=!state.show.solidObject; if(state.show.solidObject && state.renderMode==='mesh') state.renderMode='solid'; syncPrimaryButtons(); draw();}; $('solidGaussBig').onclick=()=>{state.show.solidGaussian=!state.show.solidGaussian; syncPrimaryButtons(); draw();}; $('advancedBig').onclick=()=>{state.show.advanced=!state.show.advanced; syncPrimaryButtons(); renderParams(); draw();};
+ $('lineDensity').oninput=e=>{state.lineDensity=Number(e.target.value);draw();}; $('fieldWidth').oninput=e=>{state.fieldWidth=Number(e.target.value);draw();}; $('solidAlpha').oninput=e=>{state.solidAlpha=Number(e.target.value);draw();}; $('gaussAlpha').oninput=e=>{state.gaussAlpha=Number(e.target.value);draw();}; $('fieldStyle').onchange=e=>{state.fieldStyle=e.target.value;applyTheme(state.theme);}; $('graphQuantity').onchange=e=>{state.graphQuantity=e.target.value;drawGraph(); $('derive').innerHTML=detailedDerivation(calc());}; $('renderMode').onchange=e=>{state.renderMode=e.target.value; if(state.renderMode!=='mesh') state.show.solidObject=true; syncPrimaryButtons(); draw();}; $('vRefScale').oninput=e=>{state.vRefScale=Number(e.target.value); drawGraph(); $('derive').innerHTML=detailedDerivation(calc());}; $('equipotentialMode').onchange=e=>{state.show.equipotential=e.target.value==='on'; draw();}; $('graphWindowScale').oninput=e=>{state.graphWindowScale=Number(e.target.value); drawGraph();};
+ GCV.addEventListener('pointermove',e=>{if(!(state.show.graph&&calc().graphInfo))return;const r=GCV.getBoundingClientRect(),padL=62,padR=18;const x=(e.clientX-r.left)*(GCV.width/r.width);const maxX=calc().graphInfo.max*(state.graphScale/200)*(state.graphWindowScale/100);state.graphCursor=clamp((x-padL)/(GCV.width-padL-padR)*maxX,0.001,maxX);drawGraph();}); GCV.addEventListener('pointerleave',()=>{state.graphCursor=null;drawGraph();});
+ const card=$('graphCard'), head=$('graphHeader'); let dragging=false, ox=0, oy=0; head.addEventListener('pointerdown',e=>{dragging=true; ox=e.clientX-card.offsetLeft; oy=e.clientY-card.offsetTop; head.setPointerCapture(e.pointerId);}); head.addEventListener('pointermove',e=>{ if(!dragging) return; const view=$('viewer').getBoundingClientRect(); const left=clamp(e.clientX-view.left-ox,0,Math.max(0,view.width-card.offsetWidth-6)); const top=clamp(e.clientY-view.top-oy,0,Math.max(0,view.height-card.offsetHeight-6)); card.style.left=left+'px'; card.style.top=top+'px'; card.style.right='auto';}); head.addEventListener('pointerup',()=>{dragging=false;});
+ if(window.ResizeObserver){ new ResizeObserver(()=>{ if(state.show.graph) drawGraph(); }).observe(card); }
+}
+
+// ---------- v7: potencial en P, superficies equipotenciales visibles y gráfico dual E/V ----------
+function equipColor(){
+  const colors={magenta:'#ff4fb8',amber:'#ff9f1c',cyan:'#00c2d8',white:'#f8fafc'};
+  return colors[state.equipotentialColor] || colors.magenta;
+}
+function radialDistanceForPoint(){
+  return (state.scenario.includes('wire')||state.scenario.includes('cylinder')) ? Math.hypot(state.P[0],state.P[2]) : norm(state.P);
+}
+function signedSphereVolPotential(distance,R,rhoSI){
+  if(distance < R) return rhoSI*(3*R*R-distance*distance)/(6*EPS0);
+  return rhoSI*R*R*R/(3*EPS0*Math.max(distance,1e-9));
+}
+function cylRref(p){ return Math.max(4,(p.a||p.rg||1)*3.2)*(state.vRefScale/200); }
+function signedCylinderVolPotential(distance,R,rhoSI,Rref){
+  const rr=Math.max(distance,1e-8);
+  const outsideCoeff=rhoSI*R*R/(2*EPS0);
+  if(rr<R) return outsideCoeff*Math.log(Rref/R)+rhoSI*(R*R-rr*rr)/(4*EPS0);
+  return outsideCoeff*Math.log(Rref/rr);
+}
+function potentialAtP(){
+  const id=state.scenario,p=state.params[id],P=state.P;
+  const r=Math.max(norm(P),1e-9), rho=Math.max(Math.hypot(P[0],P[2]),1e-9);
+  let V=null, ref='V(∞)=0', formula='';
+  if(id==='point_center'){ V=K*q(p.Q)/r; formula='V(P)=kQ/r'; }
+  if(id==='point_offset'){ const d=Math.max(norm(vsub(P,[p.d,0,0])),1e-9); V=K*q(p.Q)/d; formula='V(P)=kQ/|r⃗P−r⃗Q|'; }
+  if(id==='ins_sphere'){ V=signedSphereVolPotential(r,p.a,q(p.rho)); formula=r<p.a?'V=ρ(3a²−r²)/(6ε₀)':'V=ρa³/(3ε₀r)'; }
+  if(id==='dielectric_sphere'){
+    const rhoF=q(p.rho), Va=rhoF*p.a*p.a/(3*EPS0);
+    V=r<p.a ? Va+rhoF*(p.a*p.a-r*r)/(6*EPS0*p.epsr) : rhoF*p.a**3/(3*EPS0*r);
+    formula=r<p.a?'V=ρf a²/(3ε₀)+ρf(a²−r²)/(6ε₀εr)':'V=ρf a³/(3ε₀r)';
+  }
+  if(id==='shell_sphere'||id==='conductor_sphere'){ V=K*q(p.Q)/(r<p.a?p.a:r); formula=r<p.a?'V=kQ/a':'V=kQ/r'; }
+  if(id==='conductor_sphere_cavity'){ V=K*q(p.Q)/(r<p.a?p.a:r); formula=r<p.a?'V=kQ/a (constante dentro)':'V=kQ/r'; }
+  if(id==='cavity_sphere_ins'){
+    V=signedSphereVolPotential(r,p.a,q(p.rho))-signedSphereVolPotential(norm(vsub(P,[p.d,0,0])),p.b,q(p.rho));
+    formula='V=V_esfera(ρ,a)−V_esfera(ρ,b desplazada)';
+  }
+  if(id==='infinite_wire'){
+    const Rref=cylRref(p); V=q(p.lambda)/(2*Math.PI*EPS0)*Math.log(Rref/rho); ref=`V(Rref=${fmt(Rref)} m)=0`; formula='V(ρ)=λ ln(Rref/ρ)/(2πε₀)';
+  }
+  if(id==='finite_wire'){
+    V=2*K*q(p.lambda)*Math.asinh(p.ell/(2*rho)); formula='V(ρ)=2kλ asinh(ℓ/(2ρ))';
+  }
+  if(id==='ins_cylinder'){
+    const Rref=cylRref(p); V=signedCylinderVolPotential(rho,p.a,q(p.rho),Rref); ref=`V(Rref=${fmt(Rref)} m)=0`; formula=rho<p.a?'V=Va+ρv(a²−ρ²)/(4ε₀)':'V=ρv a² ln(Rref/ρ)/(2ε₀)';
+  }
+  if(id==='dielectric_cylinder'){
+    const Rref=cylRref(p), rhoF=q(p.rho); const Va=rhoF*p.a*p.a/(2*EPS0)*Math.log(Rref/p.a);
+    V=rho<p.a ? Va+rhoF*(p.a*p.a-rho*rho)/(4*EPS0*p.epsr) : rhoF*p.a*p.a/(2*EPS0)*Math.log(Rref/rho);
+    ref=`V(Rref=${fmt(Rref)} m)=0`; formula=rho<p.a?'V=Va+ρf(a²−ρ²)/(4ε₀εr)':'V=ρf a² ln(Rref/ρ)/(2ε₀)';
+  }
+  if(id==='conductor_cylinder'||id==='conductor_cylinder_cavity'){
+    const Rref=cylRref(p), coef=q(p.lambda)/(2*Math.PI*EPS0); V=coef*Math.log(Rref/(rho<p.a?p.a:rho)); ref=`V(Rref=${fmt(Rref)} m)=0`; formula=rho<p.a?'V=λ ln(Rref/a)/(2πε₀), constante':'V=λ ln(Rref/ρ)/(2πε₀)';
+  }
+  if(id==='cavity_cylinder_ins'){
+    const Rref=cylRref(p), rhoSI=q(p.rho); V=signedCylinderVolPotential(rho,p.a,rhoSI,Rref)-signedCylinderVolPotential(Math.hypot(P[0]-p.d,P[2]),p.b,rhoSI,Rref); ref='V relativo por superposición'; formula='V=V_cilindro−V_hueco';
+  }
+  if(id==='cube_center'){ V=K*q(p.Q)/r; formula='V(P)=kQ/r (la equipotencial es esférica)'; }
+  if(id==='cube_vertex'){ const d=Math.max(norm(vsub(P,[-p.acube/2,-p.acube/2,-p.acube/2])),1e-9); V=K*q(p.Q)/d; formula='V(P)=kQ/|r⃗P−r⃗Q|'; }
+  return {V,ref,formula};
+}
+function softEquipSphere(center,r,emph=false){
+  const c=equipColor(), fill=hexAlpha(c,emph?0.075:0.035), alpha=emph?.88:.44;
+  for(let phi=-Math.PI/2;phi<Math.PI/2-.01;phi+=Math.PI/8){
+    let pts=[]; for(let t=0;t<=Math.PI*2+.02;t+=Math.PI/24) pts.push(vadd(center,[r*Math.cos(phi)*Math.cos(t),r*Math.sin(phi),r*Math.cos(phi)*Math.sin(t)]));
+    poly3(pts,c,emph?1.0:.55,alpha,[3,5]);
+  }
+  for(let t=0;t<Math.PI;t+=Math.PI/4){ let pts=[]; for(let ph=-Math.PI/2;ph<=Math.PI/2+.02;ph+=Math.PI/24) pts.push(vadd(center,[r*Math.cos(ph)*Math.cos(t),r*Math.sin(ph),r*Math.cos(ph)*Math.sin(t)])); poly3(pts,c,emph?1.0:.55,alpha,[3,5]); }
+  // línea ecuatorial con relleno muy suave para distinguir la superficie
+  let ring=[]; for(let t=0;t<=Math.PI*2+.02;t+=Math.PI/28) ring.push(vadd(center,[r*Math.cos(t),0,r*Math.sin(t)])); poly3(ring,c,emph?1.35:.7,alpha,[],fill);
+}
+function softEquipCylinder(center,r,h,emph=false){
+  const c=equipColor(), alpha=emph?.88:.44;
+  for(const y of [-h/2,0,h/2]){ let pts=[]; for(let t=0;t<=Math.PI*2+.02;t+=Math.PI/26) pts.push(vadd(center,[r*Math.cos(t),y,r*Math.sin(t)])); poly3(pts,c,emph?1.2:.65,alpha,[3,5], y===0?hexAlpha(c,emph?.07:.03):null); }
+  for(let t=0;t<Math.PI*2;t+=Math.PI/5) line3(vadd(center,[r*Math.cos(t),-h/2,r*Math.sin(t)]),vadd(center,[r*Math.cos(t),h/2,r*Math.sin(t)]),c,emph?1.0:.55,alpha,[3,5]);
+}
+function drawEquipotentialSphere(center,baseR){
+  if(!(state.show.advanced || state.show.equipotential)) return;
+  const rp=Math.max(.18,norm(vsub(state.P,center)));
+  [Math.max(.15,rp*.65),rp,rp*1.34].forEach((r,i)=>softEquipSphere(center,r,i===1));
+  const pot=potentialAtP(); if(pot.V!==null) text3(vadd(center,[rp+.08,0,0]),`V(P)=${fmt(pot.V)} V`,equipColor());
+}
+function drawEquipotentialCylinder(center,baseR,h){
+  if(!(state.show.advanced || state.show.equipotential)) return;
+  const rp=Math.max(.16,Math.hypot(state.P[0]-center[0],state.P[2]-center[2]));
+  [Math.max(.15,rp*.62),rp,rp*1.35].forEach((r,i)=>softEquipCylinder(center,r,h,i===1));
+  const pot=potentialAtP(); if(pot.V!==null) text3(vadd(center,[rp+.08,h/2,0]),`V(P)=${fmt(pot.V)} V`,equipColor());
+}
+function drawEquipotentialUniformCavitySphere(center,b){
+  if(!(state.show.advanced || state.show.equipotential)) return;
+  const c=equipColor(); [-.45,0,.45].forEach((f,i)=>{ const x=center[0]+f*b, rr=b*Math.sqrt(Math.max(0,1-f*f)), pts=[]; for(let t=0;t<=Math.PI*2+.02;t+=Math.PI/24) pts.push([x,center[1]+rr*Math.cos(t),center[2]+rr*Math.sin(t)]); poly3(pts,c,i===1?1.3:.7,i===1?.85:.48,[3,5],hexAlpha(c,i===1?.08:.035)); }); text3(vadd(center,[0,b+.12,0]),'V = cte',c);
+}
+function drawEquipotentialUniformCavityCylinder(center,b,h){
+  if(!(state.show.advanced || state.show.equipotential)) return;
+  const c=equipColor(); [-.45,0,.45].forEach((f,i)=>{const x=center[0]+f*b,z=b*Math.sqrt(Math.max(0,1-f*f)); poly3([[x,-h/2,-z],[x,-h/2,z],[x,h/2,z],[x,h/2,-z]],c,i===1?1.3:.7,i===1?.85:.48,[3,5],hexAlpha(c,i===1?.08:.035));}); text3(vadd(center,[0,h/2+.13,0]),'V = cte',c);
+}
+function pointMarker(c){
+  if(!state.show.point || !c.valid) return;
+  state.projectedP=proj(c.pPoint); dot3(c.pPoint,'#ffffff',5,'P');
+  if(c.E!==0 && Number.isFinite(c.E)){ const dir=norm(c.eVec)<1e-10?[1,0,0]:unit(c.eVec),len=.16+state.vectorScale/240; arrow3(c.pPoint,vadd(c.pPoint,vmul(dir,len)),palette.field,'E(P)'); }
+  if(state.show.advanced){ const pv=potentialAtP(); if(pv.V!==null) text3(vadd(c.pPoint,[0,.18,0]),`V=${fmt(pv.V)} V`,equipColor()); }
+}
+function updatePanels(c){
+  $('hudTitle').textContent=defs[state.scenario][state.lang]; const status=$('validity'), pv=potentialAtP();
+  if(!c.valid){ status.className='status bad'; status.textContent=c.msg; ['hQ','hFlux','hE','hFace','hV'].forEach(id=>{if($(id))$(id).textContent='—'}); $('result').innerHTML=`<div class="panelTab">${c.msg}</div>`; $('derive').innerHTML=''; return; }
+  status.className='status'+(c.warning?' warn':''); status.textContent=c.warning||tr('Configuración válida.','Valid configuration.');
+  $('hQ').textContent=sci(c.qenc,'C'); $('hFlux').textContent=sci(c.flux,'N·m²/C'); $('hE').textContent=sci(c.E,'N/C'); $('hFace').textContent=(c.faceFlux===null?'—':sci(c.faceFlux,'N·m²/C')); if($('hV')) $('hV').textContent=state.show.advanced&&pv.V!==null?sci(pv.V,'V'):'—';
+  const drow=c.D!==null?`<tr><td>D(P)</td><td>${sci(c.D,'C/m²')}</td></tr>`:'';
+  const vrow=state.show.advanced&&pv.V!==null?`<tr><td>V(P)</td><td>${sci(pv.V,'V')}</td></tr><tr><td>${tr('Referencia de V','V reference')}</td><td>${pv.ref}</td></tr>`:'';
+  let faceBlock=''; if(c.faceFlux!==null){ const f=faceOptions.find(x=>x.id===state.selectedFace); faceBlock=`<div class="faceNote"><b>${tr('Cara seleccionada','Selected face')}:</b> ${f?(state.lang==='es'?f.es:f.en):state.selectedFace}<br><b>${tr('Flujo por esa cara','Flux through that face')}:</b> ${sci(c.faceFlux,'N·m²/C')}</div>`; }
+  const advancedBox=state.show.advanced&&pv.V!==null?`<div class="faceNote" style="border-left-color:${equipColor()}"><b>${tr('Modo avanzado activo','Advanced mode active')}:</b> ${tr('las superficies color magenta/cian/ámbar representan V = constante.','colored surfaces represent V = constant.')}<br><b>V(P):</b> ${sci(pv.V,'V')} &nbsp; <b>E(P):</b> ${sci(c.E,'N/C')}</div>`:'';
+  $('result').innerHTML=`<table class="table"><tr><td>${tr('Región / interpretación','Region / interpretation')}</td><td>${c.region}</td></tr><tr><td>q<sub>enc</sub></td><td>${sci(c.qenc,'C')}</td></tr><tr><td>Φ<sub>E</sub></td><td>${sci(c.flux,'N·m²/C')}</td></tr><tr><td>E(P)</td><td>${sci(c.E,'N/C')}</td></tr>${vrow}${drow}</table>${state.show.expressions?`<div class="formula">${c.formula}${state.show.advanced&&pv.V!==null?`\nV(P): ${pv.formula}`:''}</div>`:''}${advancedBox}${faceBlock}`;
+  $('derive').innerHTML=state.show.expressions?detailedDerivationV7(c,pv):`<div class="fine">${tr('Active el botón Expresiones para mostrar el desarrollo integral completo.','Enable Expressions to show the complete derivation.')}</div>`;
+}
+function detailedDerivationV7(c,pv){
+  let h=detailedDerivation(c); if(!state.show.advanced || pv.V===null) return h; const id=state.scenario,p=state.params[id]; let b='';
+  if(id==='point_center'||id==='cube_center'){ b=ln('V(r) − V(∞) = −∫<sub>∞</sub><sup>r</sup> kQ/s<sup>2</sup> ds')+ln('V(r) = kQ/r','line result'); }
+  else if(id==='point_offset'||id==='cube_vertex'){ b=ln('V(P) = kQ / |r⃗<sub>P</sub> − r⃗<sub>Q</sub>|','line result'); }
+  else if(id==='ins_sphere'){ b=ln('Para r ≥ a: &nbsp; V(r)=∫<sub>r</sub><sup>∞</sup> [ρa<sup>3</sup>/(3ε<sub>0</sub>s<sup>2</sup>)] ds = ρa<sup>3</sup>/(3ε<sub>0</sub>r)')+ln('Para r &lt; a: &nbsp; V(r)=V(a)+∫<sub>r</sub><sup>a</sup> [ρs/(3ε<sub>0</sub>)] ds')+ln('V(r)=ρ(3a<sup>2</sup>−r<sup>2</sup>)/(6ε<sub>0</sub>)','line result'); }
+  else if(id==='dielectric_sphere'){ b=ln('Fuera: &nbsp; V<sub>out</sub>(r)=∫<sub>r</sub><sup>∞</sup> [ρ<sub>f</sub>a<sup>3</sup>/(3ε<sub>0</sub>s<sup>2</sup>)] ds = ρ<sub>f</sub>a<sup>3</sup>/(3ε<sub>0</sub>r)')+ln('Dentro: &nbsp; V<sub>in</sub>(r)=V(a)+∫<sub>r</sub><sup>a</sup> [ρ<sub>f</sub>s/(3ε<sub>0</sub>ε<sub>r</sub>)] ds')+ln('V<sub>in</sub>(r)=ρ<sub>f</sub>a<sup>2</sup>/(3ε<sub>0</sub>)+ρ<sub>f</sub>(a<sup>2</sup>−r<sup>2</sup>)/(6ε<sub>0</sub>ε<sub>r</sub>)','line result')+ln('V<sub>in</sub>(a)=V<sub>out</sub>(a): el potencial es continuo, aunque E<sub>n</sub> pueda saltar.','line result'); }
+  else if(id==='shell_sphere'||id==='conductor_sphere'||id==='conductor_sphere_cavity'){ b=ln('Fuera: V(r)=kQ/r')+ln('Dentro del conductor/cáscara: V(r)=V(a)=kQ/a, constante','line result'); }
+  else if(id.includes('wire')){ b=ln('Se fija V(R<sub>ref</sub>)=0, porque una línea infinita no permite tomar V(∞)=0.')+ln('V(ρ) = −∫<sub>Rref</sub><sup>ρ</sup> [λ/(2πε<sub>0</sub>s)] ds')+ln('V(ρ)=λ ln(R<sub>ref</sub>/ρ)/(2πε<sub>0</sub>)','line result'); }
+  else if(id.includes('cylinder')){ b=ln('Para el exterior se fija V(R<sub>ref</sub>)=0.')+ln('V(ρ) = −∫ E(s) ds; en el interior se suma V(a)+∫<sub>ρ</sub><sup>a</sup>E<sub>in</sub>(s)ds.')+ln(pv.formula,'line result'); }
+  else { b=ln(pv.formula,'line result'); }
+  h+=mathBlock(tr('Potencial eléctrico y superficies equipotenciales','Electric potential and equipotential surfaces'),b+ln(`V(P) = ${fmt(pv.V)} V &nbsp;&nbsp; | &nbsp;&nbsp; E(P) = ${fmt(c.E)} N/C`,'line result')+ln(tr('Las superficies dibujadas en color diferente satisfacen V = constante; E es normal a ellas.','The differently colored surfaces satisfy V = constant; E is normal to them.')));
+  return h;
+}
+function getGraphRange(info){
+  let minX=0.001, maxX=info.max*(state.graphScale/200)*(state.graphWindowScale/100);
+  if(info.kind==='spherePoint' && state.graphStartMode==='gaussian') minX=Math.max(0.01,state.params[state.scenario].rg||.2);
+  return {minX,maxX:Math.max(maxX,minX*1.3)};
+}
+function sampleCurve(f,minX,maxX,disc=[]){ const pts=[]; for(let i=0;i<=460;i++){ const x=minX+(maxX-minX)*i/460, y=f(x); let br=false; for(const b of disc){ if(Math.abs(x-b)<(maxX-minX)/460*1.4) br=true; } pts.push([x,y,br]); } return pts; }
+function plotLine(ctx,pts,sx,sy,color,w){ ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=w; ctx.beginPath(); let start=false; pts.forEach(([x,y,br])=>{ if(br||!Number.isFinite(y)){start=false;return;} if(!start){ctx.moveTo(sx(x),sy(y));start=true;}else ctx.lineTo(sx(x),sy(y)); }); ctx.stroke(); ctx.restore(); }
+function drawGraph(c=calc()){
+  const on=state.show.graph&&c.valid&&c.graphInfo; $('graphCard').classList.toggle('hidden',!on); $('graphOff').classList.toggle('hidden',on); if(!on){ if(state.show.graph&&c.valid&&!c.graphInfo)$('graphOff').innerHTML=tr('<b>Este caso no tiene una única gráfica radial deducida por Gauss.</b> Se muestran E(P), V(P) y superficies V=cte en la escena.','<b>This case has no single radial graph deduced by Gauss.</b> E(P), V(P), and V=constant surfaces are shown in the scene.'); return; }
+  const info=c.graphInfo, card=$('graphCard'); card.classList.add('graphFloat'); resizeGraphCanvas(); const cw=GCV.width,ch=GCV.height,pad={l:66,r:54,t:21,b:44},x0=pad.l,y0=ch-pad.b,gw=cw-pad.l-pad.r,gh=ch-pad.t-pad.b; const range=getGraphRange(info), minX=range.minX,maxX=range.maxX; const sx=x=>x0+(x-minX)/(maxX-minX)*gw;
+  const mode=state.graphQuantity, showD=mode==='D'&&!!info.fD, showV=(mode==='V'||mode==='EV')&&!!info.fV, showE=(mode==='E'||mode==='EV'||(!showD&&!showV)); const ePts=showE?sampleCurve(info.f,minX,maxX,info.discontinuous||[]):[], dPts=showD?sampleCurve(info.fD,minX,maxX,[]):[], vPts=showV?sampleCurve(info.fV,minX,maxX,[]):[];
+  let maxE=1,maxD=1,maxV=1; ePts.forEach(([,y])=>{if(Number.isFinite(y))maxE=Math.max(maxE,Math.abs(y));}); dPts.forEach(([,y])=>{if(Number.isFinite(y))maxD=Math.max(maxD,Math.abs(y));}); vPts.forEach(([,y])=>{if(Number.isFinite(y))maxV=Math.max(maxV,Math.abs(y));}); const syE=y=>y0-(y/maxE)*gh*.9, syD=y=>y0-(y/maxD)*gh*.9, syV=y=>y0-(y/maxV)*gh*.9;
+  GCTX.clearRect(0,0,cw,ch); GCTX.fillStyle=palette.panel2;GCTX.fillRect(0,0,cw,ch);GCTX.strokeStyle=palette.line;GCTX.lineWidth=1;for(let i=0;i<=5;i++){let y=pad.t+i*gh/5;GCTX.beginPath();GCTX.moveTo(x0,y);GCTX.lineTo(x0+gw,y);GCTX.stroke();}for(let i=0;i<=5;i++){let x=x0+i*gw/5;GCTX.beginPath();GCTX.moveTo(x,pad.t);GCTX.lineTo(x,y0);GCTX.stroke();}
+  if(showE)plotLine(GCTX,ePts,sx,syE,palette.graph,2.8);if(showD)plotLine(GCTX,dPts,sx,syD,palette.normal,2.7);if(showV)plotLine(GCTX,vPts,sx,syV,equipColor(),2.6);
+  GCTX.strokeStyle=palette.face;GCTX.setLineDash([5,4]);(info.breaks||[]).forEach(b=>{if(b>minX&&b<maxX){GCTX.beginPath();GCTX.moveTo(sx(b),pad.t);GCTX.lineTo(sx(b),y0);GCTX.stroke();}});GCTX.setLineDash([]);
+  const radialP=radialDistanceForPoint(), cursor=state.graphCursor!==null?state.graphCursor:radialP, vals=[]; if(cursor>=minX&&cursor<=maxX){GCTX.strokeStyle=palette.text;GCTX.lineWidth=1;GCTX.beginPath();GCTX.moveTo(sx(cursor),pad.t);GCTX.lineTo(sx(cursor),y0);GCTX.stroke(); if(showE){const y=info.f(cursor);vals.push(`E=${fmt(y)} N/C`);GCTX.fillStyle=palette.graph;GCTX.beginPath();GCTX.arc(sx(cursor),syE(y),4.5,0,Math.PI*2);GCTX.fill();} if(showD){const y=info.fD(cursor);vals.push(`D=${fmt(y)} C/m²`);GCTX.fillStyle=palette.normal;GCTX.beginPath();GCTX.arc(sx(cursor),syD(y),4.5,0,Math.PI*2);GCTX.fill();} if(showV){const y=info.fV(cursor);vals.push(`V=${fmt(y)} V`);GCTX.fillStyle=equipColor();GCTX.beginPath();GCTX.arc(sx(cursor),syV(y),4.5,0,Math.PI*2);GCTX.fill();} else if(state.show.advanced && info.fV){vals.push(`V=${fmt(info.fV(cursor))} V`);} $('graphTooltip').textContent=`r=${fmt(cursor)} m | ${vals.join(' | ')}`; }
+  GCTX.font='700 12px Inter,Arial'; GCTX.fillStyle=palette.graph; if(showE)GCTX.fillText('E (N/C)',7,pad.t); GCTX.fillStyle=palette.normal; if(showD)GCTX.fillText('D (C/m²)',7,pad.t); GCTX.fillStyle=equipColor(); if(showV)GCTX.fillText('V (V)',cw-47,pad.t); GCTX.fillStyle=palette.text;GCTX.fillText(info.xLabel,cw-64,ch-12); GCTX.font='600 10.5px Inter,Arial'; GCTX.fillStyle=palette.muted; for(let i=0;i<=5;i++){const x=minX+(maxX-minX)*i/5;GCTX.fillText(fmt(x),sx(x)-12,y0+17);} if(showE){for(let i=0;i<=4;i++){const y=maxE*(1-i/4);GCTX.fillText(fmt(y),6,syE(y)+3);}} if(showV){GCTX.fillStyle=equipColor();for(let i=0;i<=4;i++){const y=maxV*(1-i/4);GCTX.fillText(fmt(y),cw-48,syV(y)+3);}}
+  const notePoint=state.scenario==='point_center'&&state.graphStartMode==='gaussian'?tr('Vista desde rᵍ: es exactamente la rama exterior 1/r², igual a una esfera cargada observada desde fuera.','View from rᵍ: this is exactly the exterior 1/r² branch, as for a charged sphere viewed from outside.'):info.note; $('graphNote').textContent=notePoint;
+}
+function renderParamsV7Sync(){ if($('equipotentialColor')) $('equipotentialColor').value=state.equipotentialColor; if($('graphStartMode')) $('graphStartMode').value=state.graphStartMode; }
+function bindV5(){
+  $('solidObjectBig').onclick=()=>{state.show.solidObject=!state.show.solidObject;if(state.show.solidObject&&state.renderMode==='mesh')state.renderMode='solid';syncPrimaryButtons();draw();};
+  $('solidGaussBig').onclick=()=>{state.show.solidGaussian=!state.show.solidGaussian;syncPrimaryButtons();draw();};
+  $('advancedBig').onclick=()=>{state.show.advanced=!state.show.advanced;if(state.show.advanced){state.show.equipotential=true;if(state.graphQuantity==='E')state.graphQuantity='EV';}syncPrimaryButtons();renderParams();renderParamsV7Sync();renderToggles();draw();};
+  $('lineDensity').oninput=e=>{state.lineDensity=Number(e.target.value);draw();}; $('fieldWidth').oninput=e=>{state.fieldWidth=Number(e.target.value);draw();}; $('solidAlpha').oninput=e=>{state.solidAlpha=Number(e.target.value);draw();}; $('gaussAlpha').oninput=e=>{state.gaussAlpha=Number(e.target.value);draw();}; $('fieldStyle').onchange=e=>{state.fieldStyle=e.target.value;applyTheme(state.theme);};
+  $('graphQuantity').onchange=e=>{state.graphQuantity=e.target.value;draw();}; $('renderMode').onchange=e=>{state.renderMode=e.target.value;if(state.renderMode!=='mesh')state.show.solidObject=true;syncPrimaryButtons();draw();}; $('vRefScale').oninput=e=>{state.vRefScale=Number(e.target.value);draw();}; $('equipotentialMode').onchange=e=>{state.show.equipotential=e.target.value==='on';draw();renderToggles();}; $('equipotentialColor').onchange=e=>{state.equipotentialColor=e.target.value;draw();}; $('graphStartMode').onchange=e=>{state.graphStartMode=e.target.value;drawGraph();}; $('graphWindowScale').oninput=e=>{state.graphWindowScale=Number(e.target.value);drawGraph();};
+  GCV.addEventListener('pointermove',e=>{if(!(state.show.graph&&calc().graphInfo))return;const rect=GCV.getBoundingClientRect(),x=(e.clientX-rect.left)*(GCV.width/rect.width),info=calc().graphInfo,range=getGraphRange(info),padL=66,padR=54;state.graphCursor=clamp(range.minX+(x-padL)/(GCV.width-padL-padR)*(range.maxX-range.minX),range.minX,range.maxX);drawGraph();}); GCV.addEventListener('pointerleave',()=>{state.graphCursor=null;drawGraph();});
+  const card=$('graphCard'), head=$('graphHeader'); let moving=false,ox=0,oy=0;head.addEventListener('pointerdown',e=>{moving=true;ox=e.clientX-card.offsetLeft;oy=e.clientY-card.offsetTop;head.setPointerCapture(e.pointerId);});head.addEventListener('pointermove',e=>{if(!moving)return;const view=$('viewer').getBoundingClientRect();card.style.left=clamp(e.clientX-view.left-ox,0,Math.max(0,view.width-card.offsetWidth-6))+'px';card.style.top=clamp(e.clientY-view.top-oy,0,Math.max(0,view.height-card.offsetHeight-6))+'px';card.style.right='auto';});head.addEventListener('pointerup',()=>{moving=false;});if(window.ResizeObserver)new ResizeObserver(()=>{if(state.show.graph)drawGraph();}).observe(card);
+}
+
+// =================== V8 · Casos especiales exactos: huecos excéntricos ===================
+const cavityIdsV8 = ['cavity_sphere_ins','cavity_cylinder_ins','conductor_sphere_cavity','conductor_cylinder_cavity'];
+state.show.specialCases = false;
+state.profilePath = 'xP';
+state.specialQuantity = 'ExV';
+state.profileSpan = 1.60;
+
+function isCavityCaseV8(id=state.scenario){ return cavityIdsV8.includes(id); }
+function isInsulatingCavityV8(id=state.scenario){ return id==='cavity_sphere_ins' || id==='cavity_cylinder_ins'; }
+function fieldMagV8(v){ return Math.hypot(v[0],v[1],v[2]); }
+
+function sphereContributionV8(P, center, R, rhoSI){
+  const u=vsub(P,center), s=Math.max(norm(u),1e-12);
+  const inside=s<R;
+  const factor=inside ? rhoSI/(3*EPS0) : rhoSI*R*R*R/(3*EPS0*s*s*s);
+  const E=vmul(u,factor);
+  const V=inside ? rhoSI*(3*R*R-s*s)/(6*EPS0) : rhoSI*R*R*R/(3*EPS0*s);
+  return {E,V,inside};
+}
+function cylinderContributionV8(P, center, R, rhoSI, Rref=1){
+  const u=[P[0]-center[0],0,P[2]-center[2]], s=Math.max(Math.hypot(u[0],u[2]),1e-12);
+  const inside=s<R;
+  const factor=inside ? rhoSI/(2*EPS0) : rhoSI*R*R/(2*EPS0*s*s);
+  const E=vmul(u,factor);
+  // Potencial con constante arbitraria común; luego se resta la referencia global.
+  const V=inside
+    ? rhoSI*R*R/(2*EPS0)*Math.log(Rref/R)+rhoSI*(R*R-s*s)/(4*EPS0)
+    : rhoSI*R*R/(2*EPS0)*Math.log(Rref/s);
+  return {E,V,inside};
+}
+function cylinderReferencePointV8(p){ return [Math.max(2.4*p.a, p.a+p.d+p.b+0.5), 0, 0]; }
+
+function exactSpecialAtV8(P, id=state.scenario){
+  const p=state.params[id];
+  if(id==='cavity_sphere_ins'){
+    const plus=sphereContributionV8(P,[0,0,0],p.a,q(p.rho));
+    const minus=sphereContributionV8(P,[p.d,0,0],p.b,-q(p.rho));
+    const E=vadd(plus.E,minus.E), V=plus.V+minus.V;
+    const inHole=norm(vsub(P,[p.d,0,0]))<p.b;
+    const inOuter=norm(P)<p.a;
+    return {E,V,ref:'V(∞)=0',region:inHole?'hueco':(inOuter?'material':'exterior')};
+  }
+  if(id==='cavity_cylinder_ins'){
+    const Rref=Math.max(4,2.8*p.a), pr=cylinderReferencePointV8(p);
+    const total=(X)=>{
+      const plus=cylinderContributionV8(X,[0,0,0],p.a,q(p.rho),Rref);
+      const minus=cylinderContributionV8(X,[p.d,0,0],p.b,-q(p.rho),Rref);
+      return {E:vadd(plus.E,minus.E),Vraw:plus.V+minus.V};
+    };
+    const here=total(P), base=total(pr);
+    const inHole=Math.hypot(P[0]-p.d,P[2])<p.b, inOuter=Math.hypot(P[0],P[2])<p.a;
+    return {E:here.E,V:here.Vraw-base.Vraw,ref:`V(${fmt(pr[0])} m,0,0)=0`,region:inHole?'hueco':(inOuter?'material':'exterior')};
+  }
+  if(id==='conductor_sphere_cavity'){
+    const r=Math.max(norm(P),1e-12);
+    const outside=r>p.a;
+    const E=outside ? vmul(P,K*q(p.Q)/(r*r*r)) : [0,0,0];
+    const V=outside ? K*q(p.Q)/r : K*q(p.Q)/p.a;
+    const inHole=norm(vsub(P,[p.d,0,0]))<p.b;
+    return {E,V,ref:'V(∞)=0',region:outside?'exterior':(inHole?'hueco protegido':'conductor')};
+  }
+  if(id==='conductor_cylinder_cavity'){
+    const rho=Math.max(Math.hypot(P[0],P[2]),1e-12), Rref=Math.max(4,2.8*p.a);
+    const outside=rho>p.a, coef=q(p.lambda)/(2*Math.PI*EPS0);
+    const E=outside ? [coef*P[0]/(rho*rho),0,coef*P[2]/(rho*rho)] : [0,0,0];
+    const V=coef*Math.log(Rref/(outside?rho:p.a));
+    const inHole=Math.hypot(P[0]-p.d,P[2])<p.b;
+    return {E,V,ref:`V(ρ=${fmt(Rref)} m)=0`,region:outside?'exterior':(inHole?'hueco protegido':'conductor')};
+  }
+  return null;
+}
+
+const potentialBeforeV8 = potentialAtP;
+potentialAtP = function(){
+  if(isCavityCaseV8()){
+    const s=exactSpecialAtV8(state.P);
+    const id=state.scenario;
+    let formula='';
+    if(id==='cavity_sphere_ins') formula='V(P)=V_esfera(+ρ,a;P)+V_esfera(−ρ,b;P−d)';
+    if(id==='cavity_cylinder_ins') formula='V(P)−V(Pref)=V_cil(+ρ,a)−V_cil(+ρ,b desplazado)';
+    if(id.includes('conductor_sphere')) formula='V=kQ/a dentro; V=kQ/r fuera';
+    if(id.includes('conductor_cylinder')) formula='V constante dentro; V=λ ln(Rref/ρ)/(2πε₀) fuera';
+    return {V:s.V,ref:s.ref,formula};
+  }
+  return potentialBeforeV8();
+};
+
+const calcBeforeV8 = calc;
+calc = function(){
+  if(!isCavityCaseV8()) return calcBeforeV8();
+  const id=state.scenario,p=state.params[id];
+  if(p.d+p.b>=p.a) return {valid:false,msg:tr('Geometría inválida: debe cumplirse d + b < a.','Invalid geometry: d + b < a is required.')};
+  const sp=exactSpecialAtV8(state.P,id), Eabs=fieldMagV8(sp.E);
+  const gaussianInCavity = p.rg < p.b;
+  const gaussianMsg = gaussianInCavity
+    ? tr('La superficie gaussiana dibujada está dentro del hueco: qenc=0 y Φ=0, aunque E(P) puede no ser cero.','The drawn Gaussian surface is inside the cavity: qenc=0 and Φ=0 although E(P) may be nonzero.')
+    : tr('Para interpretar Sg como completamente dentro del hueco se requiere rg < b.','To interpret Sg as wholly inside the cavity, rg < b is required.');
+  if(id==='cavity_sphere_ins'){
+    const formula='E(P)= (ρ/3ε₀)[Fₐ(r⃗P) − F_b(r⃗P−d⃗)]\\nDentro del hueco: E⃗ = (ρ d / 3ε₀) î';
+    return {valid:true,qenc:0,flux:0,E:Eabs,D:null,faceFlux:null,region:tr(`P en ${sp.region}; cavidad esférica excéntrica`,`P in ${sp.region}; eccentric spherical cavity`),warning:gaussianMsg,formula,derive:'',eVec:sp.E,pPoint:state.P,graphInfo:null};
+  }
+  if(id==='cavity_cylinder_ins'){
+    const formula='E(P)= (ρ/2ε₀)[Gₐ(r⃗⊥P) − G_b(r⃗⊥P−d⃗)]\\nDentro del hueco: E⃗ = (ρ d / 2ε₀) î';
+    return {valid:true,qenc:0,flux:0,E:Eabs,D:null,faceFlux:null,region:tr(`P en ${sp.region}; cavidad cilíndrica excéntrica`,`P in ${sp.region}; eccentric cylindrical cavity`),warning:gaussianMsg,formula,derive:'',eVec:sp.E,pPoint:state.P,graphInfo:null};
+  }
+  if(id==='conductor_sphere_cavity'){
+    const inside=sp.region!=='exterior';
+    return {valid:true,qenc:inside?0:q(p.Q),flux:inside?0:q(p.Q)/EPS0,E:Eabs,D:null,faceFlux:null,region:tr(`P en ${sp.region}; cavidad vacía en conductor esférico`,`P in ${sp.region}; empty cavity in spherical conductor`),warning:tr('En el hueco vacío sin carga interna, E=0 y V es constante.','In the empty cavity without internal charge, E=0 and V is constant.'),formula:'Dentro del hueco y metal: E=0, V=kQ/a\\nExterior: E=kQ/r², V=kQ/r',derive:'',eVec:sp.E,pPoint:state.P,graphInfo:null};
+  }
+  const inside=sp.region!=='exterior';
+  return {valid:true,qenc:inside?0:q(p.lambda)*p.L,flux:inside?0:q(p.lambda)*p.L/EPS0,E:Eabs,D:null,faceFlux:null,region:tr(`P en ${sp.region}; cavidad vacía en conductor cilíndrico`,`P in ${sp.region}; empty cavity in conducting cylinder`),warning:tr('En el hueco vacío sin carga interna, E=0 y V es constante.','In the empty cavity without internal charge, E=0 and V is constant.'),formula:'Dentro del hueco y metal: E=0, V=constante\\nExterior: E=λ/(2πε₀ρ)',derive:'',eVec:sp.E,pPoint:state.P,graphInfo:null};
+};
+
+const clampPointBeforeV8 = clampPoint;
+clampPoint = function(){
+  if(isCavityCaseV8() && state.show.specialCases){
+    const p=state.params[state.scenario], lim=2.6*p.a;
+    state.P[0]=clamp(state.P[0],-lim,lim);
+    state.P[1]=clamp(state.P[1],-lim,lim);
+    state.P[2]=clamp(state.P[2],-lim,lim);
+    if(state.scenario.includes('cylinder')) state.P[1]=0;
+    return;
+  }
+  clampPointBeforeV8();
+};
+
+function specialPointOnPathV8(s){
+  const P=state.P;
+  switch(state.profilePath){
+    case 'x': return [s,0,0];
+    case 'y': return [0,s,0];
+    case 'z': return [0,0,s];
+    case 'yP': return [P[0],s,P[2]];
+    case 'zP': return [P[0],P[1],s];
+    case 'xP':
+    default: return [s,P[1],P[2]];
+  }
+}
+function specialCoordinatePV8(){
+  if(state.profilePath==='x' || state.profilePath==='xP') return state.P[0];
+  if(state.profilePath==='y' || state.profilePath==='yP') return state.P[1];
+  return state.P[2];
+}
+function pointOnSelectedPathV8(){
+  const P=state.P, tol=1e-5;
+  if(state.profilePath.endsWith('P')) return true;
+  if(state.profilePath==='x') return Math.abs(P[1])<tol && Math.abs(P[2])<tol;
+  if(state.profilePath==='y') return Math.abs(P[0])<tol && Math.abs(P[2])<tol;
+  return Math.abs(P[0])<tol && Math.abs(P[1])<tol;
+}
+function profileAxisLabelV8(){
+  if(state.profilePath==='x') return 'x (m)';
+  if(state.profilePath==='y') return 'y (m)';
+  if(state.profilePath==='z') return 'z (m)';
+  return 's (m)';
+}
+function specialFieldValueV8(data, quantity){
+  if(quantity.startsWith('Ex')) return data.E[0];
+  if(quantity.startsWith('Ey')) return data.E[1];
+  if(quantity.startsWith('Ez')) return data.E[2];
+  return fieldMagV8(data.E);
+}
+function specialNeedsV8(){ return state.specialQuantity==='V' || state.specialQuantity.endsWith('V'); }
+
+function shadeSpecialRegionsV8(ctx,sx,yTop,yBottom,sMin,sMax){
+  const id=state.scenario;
+  const colorFor={hueco:'rgba(30,190,215,.11)',material:'rgba(238,85,103,.08)',exterior:'rgba(148,163,184,.05)',conductor:'rgba(203,213,225,.08)','hueco protegido':'rgba(30,190,215,.11)'};
+  let last=null,start=sMin;
+  const N=240;
+  for(let i=0;i<=N;i++){
+    const s=sMin+(sMax-sMin)*i/N, region=exactSpecialAtV8(specialPointOnPathV8(s),id).region;
+    if(last===null){last=region;start=s;}
+    if(region!==last || i===N){
+      const end=region!==last?s:sMax;
+      ctx.save(); ctx.fillStyle=colorFor[last]||'rgba(120,120,120,.05)'; ctx.fillRect(sx(start),yTop,Math.max(1,sx(end)-sx(start)),yBottom-yTop); ctx.restore();
+      start=s; last=region;
+    }
+  }
+}
+
+function drawSpecialGraphV8(){
+  const c=calc(), card=$('graphCard');
+  const on=state.show.graph && c.valid;
+  card.classList.toggle('hidden',!on); $('graphOff').classList.toggle('hidden',on);
+  if(!on) return;
+  card.classList.add('graphFloat'); resizeGraphCanvas();
+  const id=state.scenario,p=state.params[id], cw=GCV.width,ch=GCV.height;
+  const pad={l:69,r:58,t:26,b:47}, x0=pad.l,y0=ch-pad.b,gw=cw-pad.l-pad.r,gh=ch-pad.t-pad.b;
+  const span=state.profileSpan*p.a, sMin=-span, sMax=span, sx=s=>x0+(s-sMin)/(sMax-sMin)*gw;
+  const qMode=state.specialQuantity, wantV=specialNeedsV8(), fieldOnly=qMode!=='V';
+  const points=[], N=500; let eMin=0,eMax=0,vMin=0,vMax=0;
+  for(let i=0;i<=N;i++){
+    const s=sMin+(sMax-sMin)*i/N, dat=exactSpecialAtV8(specialPointOnPathV8(s),id);
+    const ev=specialFieldValueV8(dat,qMode), vv=dat.V;
+    points.push({s,ev,vv,region:dat.region});
+    if(fieldOnly){eMin=Math.min(eMin,ev);eMax=Math.max(eMax,ev);}
+    if(wantV){vMin=Math.min(vMin,vv);vMax=Math.max(vMax,vv);}
+  }
+  if(Math.abs(eMax-eMin)<1e-12){eMax+=1;eMin-=1;}
+  if(Math.abs(vMax-vMin)<1e-12){vMax+=1;vMin-=1;}
+  const syE=v=>y0-(v-eMin)/(eMax-eMin)*gh*.88-gh*.06;
+  const syV=v=>y0-(v-vMin)/(vMax-vMin)*gh*.88-gh*.06;
+
+  GCTX.clearRect(0,0,cw,ch); GCTX.fillStyle=palette.panel2; GCTX.fillRect(0,0,cw,ch);
+  shadeSpecialRegionsV8(GCTX,sx,pad.t,y0,sMin,sMax);
+  GCTX.strokeStyle=palette.line; GCTX.lineWidth=1;
+  for(let i=0;i<=5;i++){let y=pad.t+i*gh/5;GCTX.beginPath();GCTX.moveTo(x0,y);GCTX.lineTo(x0+gw,y);GCTX.stroke();}
+  for(let i=0;i<=6;i++){let x=x0+i*gw/6;GCTX.beginPath();GCTX.moveTo(x,pad.t);GCTX.lineTo(x,y0);GCTX.stroke();}
+  if(fieldOnly){
+    GCTX.strokeStyle=palette.graph;GCTX.lineWidth=2.8;GCTX.beginPath();
+    points.forEach((d,i)=>i?GCTX.lineTo(sx(d.s),syE(d.ev)):GCTX.moveTo(sx(d.s),syE(d.ev))); GCTX.stroke();
+  }
+  if(wantV){
+    GCTX.strokeStyle=equipColor();GCTX.lineWidth=2.6;GCTX.beginPath();
+    points.forEach((d,i)=>i?GCTX.lineTo(sx(d.s),syV(d.vv)):GCTX.moveTo(sx(d.s),syV(d.vv))); GCTX.stroke();
+  }
+  GCTX.strokeStyle=palette.face;GCTX.setLineDash([5,4]);
+  [-p.a,p.a,p.d-p.b,p.d+p.b].forEach(bound=>{ if(bound>sMin && bound<sMax){GCTX.beginPath();GCTX.moveTo(sx(bound),pad.t);GCTX.lineTo(sx(bound),y0);GCTX.stroke();}});
+  GCTX.setLineDash([]);
+
+  let cursor=state.graphCursor!==null?state.graphCursor:specialCoordinatePV8();
+  cursor=clamp(cursor,sMin,sMax);
+  const data=exactSpecialAtV8(specialPointOnPathV8(cursor),id), fval=specialFieldValueV8(data,qMode), vals=[];
+  GCTX.strokeStyle=palette.text; GCTX.lineWidth=1.1; GCTX.beginPath();GCTX.moveTo(sx(cursor),pad.t);GCTX.lineTo(sx(cursor),y0);GCTX.stroke();
+  if(fieldOnly){GCTX.fillStyle=palette.graph;GCTX.beginPath();GCTX.arc(sx(cursor),syE(fval),4.4,0,Math.PI*2);GCTX.fill(); vals.push(`${qMode.replace('V','')}=${fmt(fval)} N/C`);}
+  if(wantV){GCTX.fillStyle=equipColor();GCTX.beginPath();GCTX.arc(sx(cursor),syV(data.V),4.4,0,Math.PI*2);GCTX.fill(); vals.push(`V=${fmt(data.V)} V`);}
+  $('graphTooltip').textContent=`${profileAxisLabelV8().replace(' (m)','')}=${fmt(cursor)} m | ${vals.join(' | ')} | ${tr('región','region')}: ${data.region}`;
+  $('graphNote').innerHTML=`<div class="regionLegend"><span><i style="background:rgba(30,190,215,.28)"></i>${tr('Hueco','Cavity')}</span><span><i style="background:rgba(238,85,103,.22)"></i>${tr('Material','Material')}</span><span><i style="background:rgba(148,163,184,.18)"></i>${tr('Exterior','Exterior')}</span></div>${tr('Perfil exacto por trayectoria. No representa una sola función radial global.','Exact trajectory profile. It is not a single global radial function.')}`;
+  GCTX.font='700 12px Inter,Arial'; GCTX.fillStyle=palette.graph;
+  if(fieldOnly) GCTX.fillText(qMode.replace('V','')+' (N/C)',7,pad.t);
+  if(wantV){GCTX.fillStyle=equipColor();GCTX.fillText('V (V)',cw-48,pad.t);}
+  GCTX.fillStyle=palette.text;GCTX.fillText(profileAxisLabelV8(),cw-62,ch-13);
+  GCTX.font='600 10.5px Inter,Arial';GCTX.fillStyle=palette.muted;
+  for(let i=0;i<=6;i++){const s=sMin+(sMax-sMin)*i/6;GCTX.fillText(fmt(s),sx(s)-15,y0+18);}
+  if(fieldOnly){for(let i=0;i<=4;i++){const v=eMin+(eMax-eMin)*(4-i)/4;GCTX.fillText(fmt(v),5,syE(v)+3);}}
+  if(wantV){GCTX.fillStyle=equipColor();for(let i=0;i<=4;i++){const v=vMin+(vMax-vMin)*(4-i)/4;GCTX.fillText(fmt(v),cw-52,syV(v)+3);}}
+  if(!pointOnSelectedPathV8() && state.graphCursor===null){
+    $('graphTooltip').textContent += tr(' | P no está en esta trayectoria; el cursor muestra el perfil seleccionado.',' | P is not on this path; the cursor shows the selected profile.');
+  }
+}
+
+const drawGraphBeforeV8 = drawGraph;
+drawGraph = function(c=calc()){
+  if(isCavityCaseV8() && state.show.specialCases) return drawSpecialGraphV8();
+  return drawGraphBeforeV8(c);
+};
+
+function specialComponentsBoxV8(c){
+  if(!(isCavityCaseV8() && state.show.specialCases)) return '';
+  const s=exactSpecialAtV8(state.P), mag=fieldMagV8(s.E);
+  return `<div class="specialNotice"><b>${tr('Perfil especial exacto activo','Exact special profile active')}.</b> ${tr('Para esta geometría no existe una sola función radial E(r). Se evalúa E(x,y,z) por superposición.','For this geometry there is no single radial E(r) function. E(x,y,z) is evaluated by superposition.')}</div>
+    <div class="componentGrid">
+      <div class="componentCell"><b>Eₓ(P)</b><strong>${fmt(s.E[0])}<br>N/C</strong></div>
+      <div class="componentCell"><b>Eᵧ(P)</b><strong>${fmt(s.E[1])}<br>N/C</strong></div>
+      <div class="componentCell"><b>E_z(P)</b><strong>${fmt(s.E[2])}<br>N/C</strong></div>
+      <div class="componentCell"><b>|E(P)|</b><strong>${fmt(mag)}<br>N/C</strong></div>
+      <div class="componentCell"><b>V(P)</b><strong>${fmt(s.V)}<br>V</strong></div>
+    </div>`;
+}
+const updatePanelsBeforeV8 = updatePanels;
+updatePanels = function(c){
+  updatePanelsBeforeV8(c);
+  if(c.valid && isCavityCaseV8() && state.show.specialCases){
+    $('result').innerHTML += specialComponentsBoxV8(c);
+    $('tabGraph').textContent=tr('Perfil E/V','E/V profile');
+  } else {
+    $('tabGraph').textContent=tr('Gráfico E(r)','E(r) graph');
+  }
+};
+
+function specialDerivationV8(c,pv){
+  const id=state.scenario,p=state.params[id], rhoSI=q(p.rho), s=exactSpecialAtV8(state.P,id);
+  let h=mathBlock(tr('1. Advertencia de simetría','1. Symmetry warning'),
+    ln(tr('El hueco está desplazado: la distribución total NO posee simetría esférica/cilíndrica global.','The cavity is displaced: the total distribution has NO global spherical/cylindrical symmetry.'))+
+    ln(tr('Por ello no existe una única curva E(r); se usan perfiles por trayectoria y superposición exacta.','Therefore there is no single E(r) curve; trajectory profiles and exact superposition are used.'),'line result'));
+  if(id==='cavity_sphere_ins'){
+    h+=mathBlock(tr('2. Sustitución por superposición','2. Replacement by superposition'),
+      ln('Distribución real = esfera (+ρ, radio a, centro O) + esfera (−ρ, radio b, centro O′)')+
+      ln('d⃗ = d î,   u⃗ = r⃗ − d⃗'));
+    h+=mathBlock(tr('3. Campo exacto por regiones','3. Exact field by regions'),
+      ln('Defina F_R(u⃗) = u⃗,                         si |u⃗| < R')+
+      ln('                 R³u⃗/|u⃗|³,               si |u⃗| ≥ R')+
+      ln('E⃗(r⃗) = [ρ/(3ε₀)] { F_a(r⃗) − F_b(r⃗−d⃗) }','line result'));
+    h+=mathBlock(tr('4. Dentro de la cavidad','4. Inside the cavity'),
+      ln('|r⃗| < a  y  |r⃗−d⃗| < b')+
+      ln('E⃗ = [ρ/(3ε₀)] [ r⃗ − (r⃗−d⃗) ]')+
+      ln('E⃗_cavidad = (ρd/(3ε₀)) î','line result')+
+      ln(`Con los valores actuales: Eₓ = ${fmt(rhoSI*p.d/(3*EPS0))} N/C,  Eᵧ=E_z=0`,'line result'));
+    h+=mathBlock(tr('5. Potencial exacto','5. Exact potential'),
+      ln('Defina G_R(u) = 3R²−u²,       si u < R')+
+      ln('                 2R³/u,       si u ≥ R')+
+      ln('V(r⃗) = [ρ/(6ε₀)] { G_a(|r⃗|) − G_b(|r⃗−d⃗|) }')+
+      ln('Dentro del hueco: V(r⃗) = [ρ/(6ε₀)] [3(a²−b²)+d²−2dx]','line result')+
+      ln('−∇V = (ρd/(3ε₀)) î = E⃗_cavidad','line result'));
+  } else if(id==='cavity_cylinder_ins'){
+    h+=mathBlock(tr('2. Sustitución por superposición','2. Replacement by superposition'),
+      ln('Distribución real = cilindro infinito (+ρ, radio a) + cilindro desplazado (−ρ, radio b)')+
+      ln('d⃗ = d î,   r⃗⊥=(x,0,z)'));
+    h+=mathBlock(tr('3. Campo exacto transversal','3. Exact transverse field'),
+      ln('Defina G_R(u⃗) = u⃗,                         si |u⃗| < R')+
+      ln('                 R²u⃗/|u⃗|²,               si |u⃗| ≥ R')+
+      ln('E⃗(r⃗⊥) = [ρ/(2ε₀)] { G_a(r⃗⊥) − G_b(r⃗⊥−d⃗) }','line result'));
+    h+=mathBlock(tr('4. Dentro del hueco','4. Inside the cavity'),
+      ln('E⃗_cavidad = [ρ/(2ε₀)] [ r⃗⊥ − (r⃗⊥−d⃗) ]')+
+      ln('E⃗_cavidad = (ρd/(2ε₀)) î','line result')+
+      ln(`Con los valores actuales: Eₓ = ${fmt(rhoSI*p.d/(2*EPS0))} N/C,  E_z=0`,'line result'));
+    h+=mathBlock(tr('5. Potencial relativo','5. Relative potential'),
+      ln('Un cilindro infinito no admite V(∞)=0; se fija un punto de referencia P_ref.')+
+      ln('V(P)−V(P_ref) = −∫_{P_ref}^{P} E⃗·dℓ⃗')+
+      ln('Dentro del hueco: V(x)−V(x₀) = −[ρd/(2ε₀)](x−x₀)','line result'));
+  } else if(id==='conductor_sphere_cavity'){
+    h+=mathBlock(tr('2. Teorema de unicidad en el conductor','2. Uniqueness theorem in the conductor'),
+      ln('La cavidad está vacía y no contiene carga libre.')+
+      ln('En equilibrio electrostático: E⃗ = 0 dentro del metal y dentro del hueco vacío.')+
+      ln('V = constante en el metal y en la cavidad.','line result'));
+    h+=mathBlock(tr('3. Exterior esférico','3. Spherical exterior'),
+      ln('Para r ≥ a: E⃗ = (kQ/r²) r̂,   V(r)=kQ/r')+
+      ln('Para r < a: E⃗ = 0,             V(r)=kQ/a','line result'));
+  } else {
+    h+=mathBlock(tr('2. Cavidad vacía en conductor cilíndrico','2. Empty cavity in a cylindrical conductor'),
+      ln('Sin carga interna: E⃗ = 0 dentro del hueco y del conductor; V = constante.')+
+      ln('Fuera: E(ρ)=λ/(2πε₀ρ).')+
+      ln('Con referencia R_ref: V(ρ)=λ ln(R_ref/ρ)/(2πε₀).','line result'));
+  }
+  h+=mathBlock(tr('Valores en el punto P','Values at point P'),
+    ln(`Eₓ(P) = ${fmt(s.E[0])} N/C,   Eᵧ(P) = ${fmt(s.E[1])} N/C,   E_z(P) = ${fmt(s.E[2])} N/C`)+
+    ln(`|E(P)| = ${fmt(fieldMagV8(s.E))} N/C,   V(P) = ${fmt(s.V)} V`,'line result'));
+  h+=`<div class="specialNotice">${tr('En el gráfico, seleccione trayectoria y magnitud: Eₓ, Eᵧ, E_z, |E|, V o una superposición E–V. Las zonas sombreadas identifican hueco, material y exterior.','In the graph, select trajectory and quantity: Ex, Ey, Ez, |E|, V or an E–V overlay. Shaded regions identify cavity, material and exterior.')}</div>`;
+  return h;
+}
+const derivationBeforeV8 = detailedDerivationV7;
+detailedDerivationV7 = function(c,pv){
+  if(isCavityCaseV8() && state.show.specialCases) return specialDerivationV8(c,pv);
+  return derivationBeforeV8(c,pv);
+};
+
+function syncSpecialUIV8(){
+  const active=isCavityCaseV8() && state.show.specialCases;
+  $('specialPanel').classList.toggle('hidden',!state.show.specialCases);
+  if($('specialCasesBig')){
+    $('specialCasesBig').classList.toggle('on',state.show.specialCases);
+    $('specialCasesBig').querySelector('strong').textContent=state.show.specialCases?tr('Casos especiales: activo','Special cases: active'):tr('Casos especiales','Special cases');
+  }
+  if(active){
+    $('specialModel').value=state.scenario;
+    $('profilePath').value=state.profilePath;
+    $('specialQuantity').value=state.specialQuantity;
+    $('profileSpan').value=String(state.profileSpan);
+  }
+}
+const syncPrimaryButtonsBeforeV8=syncPrimaryButtons;
+syncPrimaryButtons=function(){ syncPrimaryButtonsBeforeV8(); syncSpecialUIV8(); };
+
+const renderParamsBeforeV8=renderParams;
+renderParams=function(){ renderParamsBeforeV8(); syncSpecialUIV8(); };
+
+const bindV5BeforeV8=bindV5;
+bindV5=function(){
+  bindV5BeforeV8();
+  $('specialCasesBig').onclick=()=>{
+    state.show.specialCases=!state.show.specialCases;
+    if(state.show.specialCases){
+      if(!isCavityCaseV8()) state.scenario='cavity_sphere_ins';
+      state.show.advanced=true; state.show.equipotential=true; state.show.graph=true;
+      state.graphQuantity='EV'; state.specialQuantity='ExV';
+      setDefaultPoint(); fillSelectors(); renderParams(); renderToggles(); openTab('graph');
+    }
+    syncPrimaryButtons(); draw();
+  };
+  $('specialModel').onchange=e=>{ state.scenario=e.target.value; state.show.specialCases=true; setDefaultPoint(); fillSelectors(); renderParams(); draw(); };
+  $('profilePath').onchange=e=>{ state.profilePath=e.target.value; state.graphCursor=null; drawGraph(); $('derive').innerHTML=detailedDerivationV7(calc(),potentialAtP()); };
+  $('specialQuantity').onchange=e=>{ state.specialQuantity=e.target.value; drawGraph(); $('derive').innerHTML=detailedDerivationV7(calc(),potentialAtP()); };
+  $('profileSpan').onchange=e=>{ state.profileSpan=Number(e.target.value); state.graphCursor=null; drawGraph(); };
+  const oldScenario=$('scenario').onchange;
+  $('scenario').onchange=e=>{ 
+    state.scenario=e.target.value; 
+    if(isCavityCaseV8()) { state.show.specialCases=true; state.show.advanced=true; state.show.equipotential=true; state.show.graph=true; openTab('graph'); }
+    setDefaultPoint(); renderParams(); updateAll(); syncSpecialUIV8();
+  };
+  GCV.addEventListener('pointermove',e=>{
+    if(!(state.show.specialCases&&isCavityCaseV8()&&state.show.graph)) return;
+    const rect=GCV.getBoundingClientRect(),x=(e.clientX-rect.left)*(GCV.width/rect.width),p=state.params[state.scenario],span=state.profileSpan*p.a;
+    state.graphCursor=clamp(-span+(x-69)/(GCV.width-69-58)*(2*span),-span,span);
+    drawSpecialGraphV8();
+    e.stopImmediatePropagation();
+  }, true);
+};
+
+function init(){ fillSelectors(); renderParams(); renderToggles(); tabSetup(); bind(); applyTheme(state.theme); setDefaultPoint(); resize(); bindV5(); updateAll(); renderParamsV7Sync(); $('graphCard').style.left='auto'; $('graphCard').style.right='14px'; }
+init();
+</script>
+
+<script>
+// ── Mejoras v8: Quiz interactivo, badge de región, flash de métricas ──
+
+// Quiz database by scenario category
+const quizDB = {
+  point: [
+    {q:'¿Qué ocurre con el flujo eléctrico si duplicas la carga Q dentro de la superficie gaussiana?',
+     opts:['Se duplica','Se mantiene igual','Se reduce a la mitad','Depende del radio'],
+     ans:0, fb:'Por la Ley de Gauss: Φ = Q/ε₀. Si Q → 2Q, entonces Φ → 2Φ.'},
+    {q:'Una carga puntual fuera de una superficie gaussiana cerrada contribuye al flujo total…',
+     opts:['Con una cantidad positiva','Con cero neto','Con una cantidad negativa','Depende de la geometría'],
+     ans:1, fb:'Las líneas de campo que entran por un lado salen por el otro. El flujo neto de cargas externas es siempre cero.'},
+    {q:'¿Puede usarse la Ley de Gauss para calcular E directamente en cualquier superficie gaussiana?',
+     opts:['Sí, siempre','Solo si E es uniforme sobre toda la superficie','Solo con simetría esférica','Solo en conductores'],
+     ans:1, fb:'EA = Q/ε₀ solo es válido cuando E es constante y perpendicular a la superficie. Se necesita simetría apropiada.'},
+  ],
+  sphere: [
+    {q:'Dentro de una esfera aislante uniformemente cargada, el campo eléctrico…',
+     opts:['Es cero','Crece linealmente con r','Cae como 1/r²','Es constante'],
+     ans:1, fb:'Dentro (r < a): E = ρr/(3ε₀). La carga encerrada crece como r³ y la superficie como r², dando E ∝ r.'},
+    {q:'En r = a (superficie de la esfera), el campo E es…',
+     opts:['Discontinuo (salta)','Continuo','Cero','Máximo posible'],
+     ans:1, fb:'E es continuo en r = a. Tanto la fórmula interior (ρa/3ε₀) como la exterior (ρa³/3ε₀a²) dan el mismo valor.'},
+    {q:'El potencial V(r) dentro de una esfera conductora en equilibrio es…',
+     opts:['Variable, depende de r','Constante e igual al valor en la superficie','Cero','Máximo en el centro'],
+     ans:1, fb:'E = 0 dentro del conductor ⟹ ΔV = −∫E·dr = 0. El potencial es constante e igual a V(a) = kQ/a.'},
+  ],
+  cylinder: [
+    {q:'Para un alambre infinito de densidad λ, el campo E fuera del alambre varía como…',
+     opts:['1/r²','1/r','Constante','1/r³'],
+     ans:1, fb:'Aplicando Gauss con un cilindro coaxial: E·(2πρL) = λL/ε₀, por lo que E = λ/(2πε₀ρ) ∝ 1/ρ.'},
+    {q:'¿Por qué no se puede usar V(∞) = 0 para el potencial de un alambre infinito?',
+     opts:['Sí se puede usar','Porque ln(∞/ρ) diverge al alejarse','Porque E → 0 en el infinito','No hay restricción'],
+     ans:1, fb:'V(ρ) = λ/(2πε₀) ln(Rref/ρ). Si Rref → ∞, el logaritmo diverge. Se elige una referencia finita Rref.'},
+  ],
+  cube: [
+    {q:'Una carga Q está en el centro exacto de un cubo. El flujo por cada cara es…',
+     opts:['Q/ε₀','Q/(6ε₀)','Q/(8ε₀)','Depende del tamaño'],
+     ans:1, fb:'Flujo total = Q/ε₀. Por simetría las 6 caras son equivalentes: Φ_cara = Q/(6ε₀).'},
+    {q:'Con Q en un vértice del cubo, el flujo que pasa por las 3 caras adyacentes al vértice es…',
+     opts:['Q/(8ε₀) en cada cara','Q/(24ε₀) en cada cara','Cero','Q/(3ε₀)'],
+     ans:2, fb:'Las caras adyacentes al vértice son paralelas a las líneas de E saliendo del vértice: el campo es tangente, E·n̂ = 0, por lo que Φ = 0.'},
+  ],
+  cavity: [
+    {q:'Dentro de una cavidad esférica excéntrica en una esfera aislante uniformemente cargada, el campo E es…',
+     opts:['Cero','No uniforme','Uniforme (constante)','Radial respecto al centro del hueco'],
+     ans:2, fb:'Por superposición: E⃗_total = E⃗_esfera_completa + E⃗_esfera_negativa_del_hueco. Dentro del hueco esto resulta en E⃗ = ρd⃗/(3ε₀), un campo uniforme.'},
+    {q:'En el interior de un conductor en equilibrio electrostático, el campo eléctrico es…',
+     opts:['Proporcional a la densidad de carga','Cero siempre','Máximo','Solo cero si no hay cavidades'],
+     ans:1, fb:'Si E ≠ 0 dentro del conductor, las cargas libres se moverían. En equilibrio, E = 0 en todo el material conductor.'},
+  ],
+  dielectric: [
+    {q:'En la interfaz de un dieléctrico lineal sin carga libre superficial, la componente normal de D es…',
+     opts:['Discontinua','Continua','Cero en ambos lados','Solo continua si εr = 1'],
+     ans:1, fb:'La condición de frontera para D es: D₁ₙ − D₂ₙ = σ_libre. Sin carga libre superficial (σ_libre = 0), Dₙ es continua.'},
+  ]
+};
+
+let quizState = {questions:[], current:0, score:0, answered:false, visible:false};
+
+function getScenarioCategory(){
+  const s = typeof state !== 'undefined' ? state.scenario : '';
+  if(s.includes('cube')) return 'cube';
+  if(s.includes('cavity') || s.includes('conductor_sphere_cavity') || s.includes('conductor_cylinder_cavity')) return 'cavity';
+  if(s.includes('dielectric')) return 'dielectric';
+  if(s.includes('cylinder') || s.includes('wire')) return 'cylinder';
+  if(s.includes('sphere') || s.includes('shell') || s.includes('conductor_sphere')) return 'sphere';
+  return 'point';
+}
+
+function buildQuiz(){
+  const cat = getScenarioCategory();
+  const pool = [...(quizDB[cat]||quizDB.point), ...quizDB.point.slice(0,1)];
+  // Shuffle
+  quizState.questions = pool.sort(()=>Math.random()-.5).slice(0,3);
+  quizState.current = 0;
+  quizState.score = 0;
+  quizState.answered = false;
+  renderQuiz();
+}
+
+function renderQuiz(){
+  const qs = quizState.questions;
+  if(!qs.length){ document.getElementById('quizContent').innerHTML='<div class="fine">No hay preguntas para este escenario.</div>'; return; }
+  const q = qs[quizState.current];
+  const total = qs.length;
+  document.getElementById('quizScore').textContent = `${quizState.score} / ${quizState.current}`;
+  document.getElementById('quizTitle').textContent = `Quiz · Pregunta ${quizState.current+1}/${total}`;
+  let html = `<div class="quiz-q">${q.q}</div><div class="quiz-options">`;
+  q.opts.forEach((opt,i)=>{
+    html += `<button class="quiz-opt" onclick="answerQuiz(${i})">${opt}</button>`;
+  });
+  html += '</div>';
+  document.getElementById('quizContent').innerHTML = html;
+  quizState.answered = false;
+}
+
+function answerQuiz(idx){
+  if(quizState.answered) return;
+  quizState.answered = true;
+  const q = quizState.questions[quizState.current];
+  const correct = idx === q.ans;
+  if(correct) quizState.score++;
+  document.querySelectorAll('.quiz-opt').forEach((btn,i)=>{
+    btn.disabled = true;
+    if(i === q.ans) btn.classList.add('correct');
+    else if(i === idx && !correct) btn.classList.add('wrong');
+  });
+  const fb = document.createElement('div');
+  fb.className = 'quiz-feedback' + (correct ? '' : ' wrong-fb');
+  fb.innerHTML = (correct ? '✓ Correcto. ' : '✗ Incorrecto. ') + q.fb;
+  document.querySelector('.quiz-options').after(fb);
+  document.getElementById('quizScore').textContent = `${quizState.score} / ${quizState.current+1}`;
+}
+
+function nextQuiz(){
+  if(quizState.current < quizState.questions.length - 1){
+    quizState.current++;
+    renderQuiz();
+  } else {
+    document.getElementById('quizContent').innerHTML = `
+      <div class="quiz-feedback" style="text-align:center;padding:14px">
+        🎉 Resultado: <strong>${quizState.score} / ${quizState.questions.length}</strong><br>
+        <span class="fine">${quizState.score === quizState.questions.length ? '¡Perfecto! Dominas el tema.' : quizState.score >= quizState.questions.length/2 ? 'Buen trabajo, sigue practicando.' : 'Revisa la deducción completa para reforzar.'}</span>
+      </div>`;
+    document.getElementById('quizScore').textContent = `Final: ${quizState.score}/${quizState.questions.length}`;
+  }
+}
+
+function toggleQuiz(){
+  const panel = document.getElementById('quizPanel');
+  quizState.visible = !quizState.visible;
+  panel.classList.toggle('hidden', !quizState.visible);
+  if(quizState.visible) buildQuiz();
+  // Switch to result tab so quiz is visible
+  if(quizState.visible){
+    document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='result'));
+    document.querySelectorAll('.panelTab').forEach(p=>p.classList.toggle('hidden',p.id!=='result'));
+    setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  }
+}
+
+// ── Region badge update ──
+function updateRegionBadge(region){
+  const badge = document.getElementById('regionBadge');
+  if(!badge) return;
+  const r = (region||'').toLowerCase();
+  badge.className = 'region-badge';
+  if(r.includes('interior') || r.includes('inside') || r.includes('dentro') || r.includes('hueco')){
+    badge.className += ' region-inside'; badge.textContent = 'Interior';
+  } else if(r.includes('conductor') || r.includes('metal')){
+    badge.className += ' region-conductor'; badge.textContent = 'Conductor';
+  } else {
+    badge.className += ' region-outside'; badge.textContent = 'Exterior';
+  }
+}
+
+// ── Flash animation on metric update ──
+function flashMetric(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.remove('flash');
+  void el.offsetWidth; // reflow
+  el.classList.add('flash');
+  setTimeout(()=>el.classList.remove('flash'), 500);
+}
+
+// Patch updatePanels to also update badge and flash metrics
+const _origUpdatePanels = typeof updatePanels === 'function' ? updatePanels : null;
+if(_origUpdatePanels){
+  updatePanels = function(c){
+    _origUpdatePanels(c);
+    if(c && c.region) updateRegionBadge(c.region);
+    ['mE','mFlux','mQ'].forEach(flashMetric);
+    // Rebuild quiz when scenario changes (if visible)
+    if(quizState.visible) buildQuiz();
+  };
+}
+
+// ── Scene change animation ──
+const _origScenarioChange = document.getElementById('scenario');
+if(_origScenarioChange){
+  _origScenarioChange.addEventListener('change', ()=>{
+    const viewer = document.getElementById('viewer');
+    viewer.classList.add('scene-change');
+    setTimeout(()=>viewer.classList.remove('scene-change'), 400);
+  });
+}
+</script>
+</body>
+</html>
