@@ -61,6 +61,16 @@ header::before{
 }
 @keyframes pill-pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 25%,transparent)}50%{box-shadow:0 0 0 4px transparent}}
 .toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.lang-toggle{
+  display:inline-flex;align-items:center;gap:6px;
+  border-color:color-mix(in srgb,var(--accent) 42%,var(--line));
+  background:color-mix(in srgb,var(--accent) 10%,transparent);
+  color:var(--text);
+  font-family:var(--font-mono);
+  font-size:.68rem;
+  padding:7px 10px;
+}
+.lang-toggle strong{color:var(--accent);font-weight:800}
 
 /* ── Buttons ── */
 button{border:1px solid transparent;border-radius:11px;padding:7px 12px;font-weight:700;background:var(--accent);color:var(--accentText);cursor:pointer;transition:all .15s ease;letter-spacing:-.01em}
@@ -446,6 +456,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     </div>
   </div>
   <div class="toolbar">
+    <button id="langToggle" class="secondary lang-toggle" title="Cambiar idioma"><strong>ESP</strong>/<span>ENG</span></button>
     <button id="resetCam" class="secondary" title="Restaurar vista de cámara">⟲ Recentrar</button>
     <button id="quizBtn" class="secondary" title="Abrir quiz interactivo" onclick="toggleQuiz()">🧩 Quiz</button>
     <button id="capture" title="Exportar imagen PNG">📷 PNG</button>
@@ -1232,6 +1243,7 @@ function tabSetup(){ document.querySelectorAll('.tab').forEach(btn=>btn.onclick=
 function bind(){
   $('scenario').onchange=e=>{ state.scenario=e.target.value; setDefaultPoint(); renderParams(); updateAll(); };
   $('lang').onchange=e=>{ state.lang=e.target.value; updateAll(); };
+  $('langToggle').onclick=()=>{ state.lang=state.lang==='es'?'en':'es'; $('lang').value=state.lang; updateAll(); };
   $('theme').onchange=e=>{ state.theme=e.target.value; applyTheme(state.theme); };
   $('level').onchange=e=>{ state.level=e.target.value; draw(); };
   $('theta').oninput=e=>{ state.theta=Number(e.target.value); draw(); };
@@ -1287,6 +1299,11 @@ function applyTheme(name){
 }
 function uiText(){
   const es=state.lang==='es';
+  const langToggle=$('langToggle');
+  if(langToggle){
+    langToggle.innerHTML=es?'<strong>ESP</strong>/<span>ENG</span>':'<span>ESP</span>/<strong>ENG</strong>';
+    langToggle.title=es?'Cambiar a inglés':'Switch to Spanish';
+  }
   $('titleMain').textContent=es?'GaussLab-AI 3D+ v7 · Tutor de Ley de Gauss':'GaussLab-AI 3D+ · Gauss Law Tutor';
   $('subTitle').textContent=es?'Tutorial 3D con desarrollo integral · superficies esféricas, cilíndricas y cúbicas · Autor: Prof. Wong':'3D tutorial with integral derivations · spherical, cylindrical and cubic surfaces · Author: Prof. Wong';
   $('secModel').textContent=es?'1. Modelo físico':'1. Physical model';
